@@ -4,51 +4,70 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import mongoose from "mongoose";
-import authRoutes from "./routes/auth.js"; // your auth routes
 import dotenv from "dotenv";
+
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Routes
+import authRoutes from "./middleware/auth.js"; // your auth routes
+import teacherRoutes from "./routes/teacherRoutes.js"; // teacher registration routes
 
 dotenv.config();
 
 const app = express();
 
-// Middleware
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
+// --- Middleware
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-// --- 1️⃣ Connect MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/your_db_name", {
+// --- Connect MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/learnshare", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => console.log("✅ MongoDB connected"))
 .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// --- 2️⃣ Mount auth routes
-app.use("/api/auth", authRoutes);
+// --- Mount routes
+app.use("/api/auth", authRoutes);       // Auth routes
+app.use("/api/teacher", teacherRoutes); // Teacher registration & teacher-specific routes
 
-// --- 3️⃣ Example REST routes
-app.get("/api/teachers", (req, res) => {
-  const teachers = [
-    { id: 1, name: "John Doe", skill: "Math", level: "Beginner", experience: "2 years", description: "Passionate Math teacher", rating: 4, image: "https://via.placeholder.com/150" },
-    { id: 2, name: "Jane Smith", skill: "Physics", level: "Intermediate", experience: "5 years", description: "Experienced Physics teacher", rating: 5, image: "https://via.placeholder.com/150" },
-  ];
-  res.json(teachers);
+// --- Example REST routes
+import Teacher from "./models/Teacher.js";
+
+// Get all teachers (optional, already handled in teacherRoutes.js if you want)
+app.get("/api/teachers", async (req, res) => {
+  try {
+    const teachers = await Teacher.find();
+    res.json(teachers);
+  } catch (error) {
+    console.error("Error fetching teachers:", error);
+    res.status(500).json({ message: "Server error fetching teachers" });
+  }
 });
 
+// Get all skills (static example)
 app.get("/api/skills", (req, res) => {
   res.json(["Math", "Physics", "Chemistry", "Biology"]);
 });
 
-// --- 4️⃣ Root test route
+// Root test route
 app.get("/", (req, res) => res.send("Server running"));
 
-// --- 5️⃣ Create HTTP server and Socket.IO
+// --- HTTP server + Socket.IO
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: "http://localhost:5173", methods: ["GET", "POST"], credentials: true },
 });
 
-// --- 6️⃣ Socket.IO connection
+// Socket.IO connection
 io.on("connection", (socket) => {
   console.log("✅ User connected:", socket.id);
 
@@ -60,6 +79,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => console.log("❌ User disconnected:", socket.id));
 });
 
-// --- 7️⃣ Start server
+// --- Start server
 const PORT = process.env.PORT || 5001;
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -47,7 +47,22 @@ function Teach() {
     e.preventDefault();
   
     try {
-      const res = await axios.post("http://localhost:5001/api/teacher/register", form);
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("email", form.email);
+      formData.append("categories", form.categories.join(",")); // send as CSV
+      formData.append("experience", form.experience);
+      formData.append("bio", form.bio);
+      formData.append("mode", form.mode);
+      formData.append("github", form.github);
+      formData.append("linkedin", form.linkedin);
+      formData.append("website", form.website);
+      if (idFile) formData.append("idFile", idFile); // include image
+  
+      const res = await axios.post("http://localhost:5001/api/teacher/register", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+  
       alert(res.data.message);
       console.log("Saved teacher:", res.data.teacher);
     } catch (err) {
@@ -55,6 +70,7 @@ function Teach() {
       alert(err.response?.data?.message || "Error registering teacher");
     }
   };
+  
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-violet-50 to-fuchsia-50">

@@ -10,7 +10,11 @@ function Explore() {
 
   const [teachers, setTeachers] = useState([]);
   const [skills, setSkills] = useState([]);
-  const [levels, setLevels] = useState(["Beginner", "Intermediate", "Advanced"]); // optional if static
+  const [levels, setLevels] = useState([
+    "Beginner",
+    "Intermediate",
+    "Advanced",
+  ]); // optional if static
 
   const [selectedSkill, setSelectedSkill] = useState(skillFromCategory);
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -18,7 +22,7 @@ function Explore() {
   // Fetch teachers from DB
   const fetchTeachers = async () => {
     try {
-      const res = await axios.get("/api/teachers"); // replace with your endpoint
+      const res = await axios.get("http://localhost:5001/api/teachers");
       setTeachers(Array.isArray(res.data) ? res.data : []); // ✅ ensure array
     } catch (err) {
       console.error("Error fetching teachers:", err);
@@ -29,7 +33,7 @@ function Explore() {
   // Optional: fetch skills from DB
   const fetchSkills = async () => {
     try {
-      const res = await axios.get("/api/skills"); // replace with your endpoint
+      const res = await axios.get("http://localhost:5001/api/skills");
       setSkills(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching skills:", err);
@@ -136,14 +140,15 @@ function Explore() {
         {filteredTeachers.length > 0 ? (
           filteredTeachers.map((teacher) => (
             <div
-              key={teacher.id}
+              key={teacher._id}
               className="bg-white rounded-lg shadow-md hover:shadow-xl transition transform hover:scale-105 p-4 relative"
             >
               <img
-                src={teacher.image}
+                src={teacher.idFile || "https://via.placeholder.com/150"}
                 alt={teacher.name}
                 className="w-full h-40 object-cover rounded-lg"
               />
+
               <h3 className="text-lg font-semibold mt-3">{teacher.name}</h3>
               <p className="text-gray-600 text-sm">{teacher.skill}</p>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -154,10 +159,14 @@ function Explore() {
                   {teacher.experience}
                 </span>
               </div>
-              <p className="text-gray-500 text-sm mt-2">{teacher.description}</p>
+              <p className="text-gray-500 text-sm mt-2">
+                {teacher.description}
+              </p>
               <div className="mt-3 text-yellow-500">
                 {"⭐".repeat(Math.floor(teacher.rating))}
-                <span className="text-gray-600 text-sm ml-1">{teacher.rating}</span>
+                <span className="text-gray-600 text-sm ml-1">
+                  {teacher.rating}
+                </span>
               </div>
               <button
                 onClick={() =>
