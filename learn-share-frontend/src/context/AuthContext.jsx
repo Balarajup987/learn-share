@@ -4,14 +4,14 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null); // ✅ store user info
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ add loading
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
 
     if (token && userData && userData !== "undefined") {
-      // check
       try {
         setIsLoggedIn(true);
         setUser(JSON.parse(userData));
@@ -21,13 +21,15 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
       }
     }
+
+    setLoading(false); // ✅ finished loading
   }, []);
 
   const login = (token, userData) => {
     localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(userData)); // save user info
+    localStorage.setItem("user", JSON.stringify(userData));
     setIsLoggedIn(true);
-    setUser(userData); // update context
+    setUser(userData);
   };
 
   const logout = () => {
@@ -38,10 +40,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// Hook to consume the context
 export const useAuth = () => useContext(AuthContext);
+export { AuthContext };

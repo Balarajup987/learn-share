@@ -9,10 +9,11 @@ import Explore from "./pages/Explore";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Teach from "./pages/Teach";
-import TeacherDetails from "./pages/TeacherProfile";
+import TeacherProfile from "./pages/TeacherProfile"; // ✅ Correct import
 import ChatBox from "./components/ChatBox";
 import ScrollToTop from "./components/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
+import Requests from "./pages/Requests";
 
 function App() {
   return (
@@ -21,10 +22,10 @@ function App() {
         {/* Scroll to top on route change */}
         <ScrollToTop />
 
-        {/* Navbar stays on all pages */}
+        {/* Navbar on all pages */}
         <Navbar />
 
-        {/* Add padding so content is not hidden behind navbar */}
+        {/* Add top padding for navbar height */}
         <div className="pt-24">
           <Routes>
             {/* Home Page */}
@@ -51,16 +52,16 @@ function App() {
 
             {/* Explore Page */}
             <Route path="/explore" element={<Explore />} />
-
-            {/* Login & Signup */}
+            <Route path="/requests" element={<Requests />} />
+            {/* Auth Pages */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
 
             {/* Teach Page */}
             <Route path="/teach" element={<Teach />} />
 
-            {/* Teacher Details Page */}
-            <Route path="/teacher/:id" element={<TeacherDetails />} />
+            {/* ✅ Single Correct Route for Teacher Profile */}
+            <Route path="/teacher/:teacherId" element={<TeacherProfile />} />
 
             {/* ChatBox Route */}
             <Route path="/chat" element={<ChatBox />} />

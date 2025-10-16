@@ -62,6 +62,12 @@ function Navbar() {
                     <Link to="/courses-teaching">Courses I'm Teaching</Link>
                   </li>
                 )}
+                <Link
+                  to="/requests"
+                  className="px-3 py-2 text-blue-600 hover:underline"
+                >
+                  Requests
+                </Link>
 
                 <li
                   className="px-5 py-3 hover:bg-gray-100 cursor-pointer"

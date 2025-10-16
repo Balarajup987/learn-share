@@ -1,36 +1,61 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 function Explore() {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const { user, loading } = useAuth(); // ✅ use loading
   const skillFromCategory = location.state?.selectedSkill || "";
 
   const [teachers, setTeachers] = useState([]);
   const [skills, setSkills] = useState([]);
-  const [levels, setLevels] = useState([
-    "Beginner",
-    "Intermediate",
-    "Advanced",
-  ]); // optional if static
-
+  const [levels] = useState(["Beginner", "Intermediate", "Advanced"]);
   const [selectedSkill, setSelectedSkill] = useState(skillFromCategory);
   const [selectedLevel, setSelectedLevel] = useState("");
+  const [requests, setRequests] = useState({}); // { teacherId: "pending" | "accepted" }
 
-  // Fetch teachers from DB
+  const getImageUrl = (idFile) => {
+    if (!idFile) return "https://via.placeholder.com/300";
+    if (idFile.startsWith("http")) return idFile;
+    return `http://localhost:5001/uploads/${idFile}`;
+  };
+
   const fetchTeachers = async () => {
     try {
       const res = await axios.get("http://localhost:5001/api/teachers");
-      setTeachers(Array.isArray(res.data) ? res.data : []); // ✅ ensure array
+      const list = Array.isArray(res.data) ? res.data : [];
+
+      // filter out logged-in user
+      const filtered =
+        user && user._id ? list.filter((t) => t._id !== user._id) : list;
+
+      // build requests map
+      const reqMap = {};
+      filtered.forEach((t) => {
+        const pending = Array.isArray(t.requestsReceived)
+          ? t.requestsReceived.map(String)
+          : [];
+        const connections = Array.isArray(t.connections)
+          ? t.connections.map(String)
+          : [];
+
+        if (user && user._id) {
+          if (connections.includes(user._id)) reqMap[t._id] = "accepted";
+          else if (pending.includes(user._id)) reqMap[t._id] = "pending";
+        }
+      });
+
+      setTeachers(filtered);
+      setRequests(reqMap);
     } catch (err) {
       console.error("Error fetching teachers:", err);
-      setTeachers([]); // fallback
+      setTeachers([]);
+      setRequests({});
     }
   };
 
-  // Optional: fetch skills from DB
   const fetchSkills = async () => {
     try {
       const res = await axios.get("http://localhost:5001/api/skills");
@@ -44,7 +69,7 @@ function Explore() {
   useEffect(() => {
     fetchTeachers();
     fetchSkills();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (skillFromCategory) setSelectedSkill(skillFromCategory);
@@ -53,7 +78,9 @@ function Explore() {
   const filteredTeachers = Array.isArray(teachers)
     ? teachers.filter(
         (teacher) =>
-          (selectedSkill === "" || teacher.skill === selectedSkill) &&
+          (selectedSkill === "" ||
+            teacher.categories?.includes(selectedSkill) ||
+            teacher.skill === selectedSkill) &&
           (selectedLevel === "" || teacher.level === selectedLevel)
       )
     : [];
@@ -61,6 +88,55 @@ function Explore() {
   const clearAllFilters = () => {
     setSelectedSkill("");
     setSelectedLevel("");
+  };
+
+  const handleConnect = async (teacherId) => {
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center min-h-screen">
+          <p>Loading...</p>
+        </div>
+      );
+    }
+    
+    if (!user || !user._id) {
+      alert("Please log in to send connection requests.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `http://localhost:5001/api/connection/send/${user._id}/${teacherId}`,
+        {}, // body empty
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ add JWT here
+          },
+        }
+      );
+
+      setRequests((prev) => ({ ...prev, [teacherId]: "pending" }));
+    } catch (err) {
+      console.error("Error sending request:", err);
+      alert(err.response?.data?.message || "Error sending request");
+    }
+  };
+
+  const handleDisconnect = async (teacherId) => {
+    if (!user || !user._id) return;
+    try {
+      await axios.post("http://localhost:5001/api/connection/disconnect", {
+        userId: user._id,
+        teacherId,
+      });
+      const newReq = { ...requests };
+      delete newReq[teacherId];
+      setRequests(newReq);
+    } catch (err) {
+      console.error("Error disconnecting:", err);
+      alert(err.response?.data?.message || "Error disconnecting");
+    }
   };
 
   return (
@@ -144,13 +220,14 @@ function Explore() {
               className="bg-white rounded-lg shadow-md hover:shadow-xl transition transform hover:scale-105 p-4 relative"
             >
               <img
-                src={teacher.idFile || "https://via.placeholder.com/150"}
+                src={getImageUrl(teacher.idFile)}
                 alt={teacher.name}
                 className="w-full h-40 object-cover rounded-lg"
               />
-
               <h3 className="text-lg font-semibold mt-3">{teacher.name}</h3>
-              <p className="text-gray-600 text-sm">{teacher.skill}</p>
+              <p className="text-gray-600 text-sm">
+                {teacher.skill || teacher.categories?.join(", ")}
+              </p>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
                   {teacher.level}
@@ -160,19 +237,50 @@ function Explore() {
                 </span>
               </div>
               <p className="text-gray-500 text-sm mt-2">
-                {teacher.description}
+                {teacher.bio || teacher.description}
               </p>
               <div className="mt-3 text-yellow-500">
-                {"⭐".repeat(Math.floor(teacher.rating))}
+                {"⭐".repeat(Math.floor(teacher.rating || 0))}
                 <span className="text-gray-600 text-sm ml-1">
-                  {teacher.rating}
+                  {teacher.rating || 0}
                 </span>
               </div>
+
+              {/* ✅ Connect / Pending / Accepted buttons */}
+              {!loading &&
+                (requests[teacher._id] === "pending" ? (
+                  <button className="mt-4 w-full bg-yellow-500 text-white py-2 rounded-lg">
+                    Pending
+                  </button>
+                ) : requests[teacher._id] === "accepted" ? (
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      className="w-1/2 bg-green-500 text-white py-2 rounded-lg"
+                      onClick={() => navigate(`/chat?teacher=${teacher._id}`)}
+                    >
+                      Chat
+                    </button>
+                    <button
+                      className="w-1/2 bg-red-500 text-white py-2 rounded-lg"
+                      onClick={() => handleDisconnect(teacher._id)}
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="mt-4 w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 transition"
+                    onClick={() => handleConnect(teacher._id)}
+                  >
+                    Connect
+                  </button>
+                ))}
+
               <button
                 onClick={() =>
-                  navigate(`/teacher/${teacher.id}`, { state: teacher })
+                  navigate(`/teacher/${teacher._id}`, { state: teacher })
                 }
-                className="mt-4 w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 transition"
+                className="mt-2 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition"
               >
                 View Profile
               </button>

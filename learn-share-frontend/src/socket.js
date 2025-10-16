@@ -1,12 +1,15 @@
-// src/socket.js
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5001", { // ✅ updated port
-  transports: ["websocket", "polling"], // ensures proper transport
+const token = localStorage.getItem("token");
+
+const socket = io("http://localhost:5001", {
+  auth: {
+    token, // send token with handshake
+  },
 });
 
 socket.on("connect", () => {
-  console.log("✅ Connected to server via Socket.IO");
+  console.log("Socket connected:", socket.id);
 });
 
 export default socket;
