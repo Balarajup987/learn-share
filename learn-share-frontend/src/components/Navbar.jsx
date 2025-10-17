@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { isLoggedIn, user, logout } = useAuth(); // ✅ moved here
+  const { isLoggedIn, user, logout } = useAuth();
 
   const firstLetter = user?.name ? user.name.charAt(0).toUpperCase() : "";
 
@@ -52,23 +52,20 @@ function Navbar() {
                 <li className="px-5 py-3 hover:bg-gray-100">
                   <Link to="/dashboard">Dashboard</Link>
                 </li>
-
                 <li className="px-5 py-3 hover:bg-gray-100">
                   <Link to="/my-courses">My Courses</Link>
                 </li>
-
+                <li className="px-5 py-3 hover:bg-gray-100">
+                  <Link to="/connections">Connections</Link>
+                </li>
+                <li className="px-5 py-3 hover:bg-gray-100">
+                  <Link to="/requests">Requests Received</Link>
+                </li>
                 {user?.teachingCourses?.length > 0 && (
                   <li className="px-5 py-3 hover:bg-gray-100">
                     <Link to="/courses-teaching">Courses I'm Teaching</Link>
                   </li>
                 )}
-                <Link
-                  to="/requests"
-                  className="px-3 py-2 text-blue-600 hover:underline"
-                >
-                  Requests
-                </Link>
-
                 <li
                   className="px-5 py-3 hover:bg-gray-100 cursor-pointer"
                   onClick={logout}
@@ -124,6 +121,12 @@ function Navbar() {
                 </li>
                 <li>
                   <Link to="/my-courses">My Courses</Link>
+                </li>
+                <li>
+                  <Link to="/connections">Connections</Link>
+                </li>
+                <li>
+                  <Link to="/requests">Requests Received</Link>
                 </li>
                 <li onClick={logout} className="cursor-pointer">
                   Logout

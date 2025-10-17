@@ -9,9 +9,10 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import authRoutes from "./middleware/auth.js";
+import authRoutes from "./routes/authRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import connectionRoutes from "./routes/connectionRoutes.js";
+import ChatMessage from "./models/ChatMessage.js";
 
 dotenv.config();
 
@@ -26,12 +27,13 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/learnshare", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("✅ MongoDB connected"))
-.catch(err => console.error("❌ MongoDB error:", err));
+mongoose
+  .connect("mongodb://127.0.0.1:27017/learnshare", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB error:", err));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -59,7 +61,11 @@ app.get("/", (req, res) => res.send("Server running"));
 // HTTP + Socket.IO
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"], credentials: true },
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
 });
 
 io.use((socket, next) => {
@@ -78,9 +84,80 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log("✅ User connected:", socket.userId);
 
+  socket.on("joinRoom", (roomId) => {
+    socket.join(roomId);
+  });
+
+  socket.on("sendMessage", async (payload) => {
+    try {
+      const { roomId, text, file, toTeacherId } = payload;
+
+      if (!toTeacherId || toTeacherId === "") {
+        console.error("Invalid toTeacherId:", toTeacherId);
+        return;
+      }
+
+      const message = new ChatMessage({
+        roomId,
+        fromUserId: socket.userId,
+        toTeacherId,
+        text: text || "",
+        file: file || null,
+        time: new Date(),
+      });
+      await message.save();
+      io.to(roomId).emit("receiveMessage", {
+        text: message.text,
+        file: message.file,
+        senderId: socket.userId,
+        time: message.time,
+      });
+    } catch (e) {
+      console.error("sendMessage error", e);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.userId);
   });
+});
+
+// Chat history endpoint
+app.get("/api/chat/history", async (req, res) => {
+  try {
+    const { userId, teacherId } = req.query;
+    if (!userId || !teacherId)
+      return res.status(400).json({ message: "userId and teacherId required" });
+    const roomId = `${userId}:${teacherId}`;
+    const messages = await ChatMessage.find({ roomId })
+      .sort({ createdAt: 1 })
+      .lean();
+    res.json(messages);
+  } catch (e) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get user by ID
+app.get("/api/user/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (e) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get teacher by email
+app.get("/api/teacher/by-email/:email", async (req, res) => {
+  try {
+    const teacher = await Teacher.findOne({ email: req.params.email });
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+    res.json(teacher);
+  } catch (e) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 const PORT = process.env.PORT || 5001;

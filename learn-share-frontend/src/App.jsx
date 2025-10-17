@@ -9,11 +9,15 @@ import Explore from "./pages/Explore";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Teach from "./pages/Teach";
-import TeacherProfile from "./pages/TeacherProfile"; // ✅ Correct import
+import TeacherProfile from "./pages/TeacherProfile";
 import ChatBox from "./components/ChatBox";
 import ScrollToTop from "./components/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
 import Requests from "./pages/Requests";
+import Dashboard from "./pages/Dashboard";
+import MyCourses from "./pages/MyCourses";
+import Connections from "./pages/Connections";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -52,7 +56,49 @@ function App() {
 
             {/* Explore Page */}
             <Route path="/explore" element={<Explore />} />
-            <Route path="/requests" element={<Requests />} />
+
+            {/* Protected Pages */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-courses"
+              element={
+                <ProtectedRoute>
+                  <MyCourses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/connections"
+              element={
+                <ProtectedRoute>
+                  <Connections />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/requests"
+              element={
+                <ProtectedRoute>
+                  <Requests />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <ChatBox />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Auth Pages */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -60,11 +106,15 @@ function App() {
             {/* Teach Page */}
             <Route path="/teach" element={<Teach />} />
 
-            {/* ✅ Single Correct Route for Teacher Profile */}
-            <Route path="/teacher/:teacherId" element={<TeacherProfile />} />
-
-            {/* ChatBox Route */}
-            <Route path="/chat" element={<ChatBox />} />
+            {/* Teacher Profile */}
+            <Route
+              path="/teacher/:teacherId"
+              element={
+                <ProtectedRoute>
+                  <TeacherProfile />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </div>
       </Router>

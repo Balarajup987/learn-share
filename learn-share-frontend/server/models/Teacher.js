@@ -11,9 +11,10 @@ const teacherSchema = new mongoose.Schema({
   linkedin: String,
   website: String,
   idFile: String,
-  connections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Teacher" }],
-  requestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "Teacher" }],
-  requestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "Teacher" }],
+  // Store User IDs here since connections are between users and teachers
+  connections: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  requestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  requestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 export default mongoose.model("Teacher", teacherSchema);

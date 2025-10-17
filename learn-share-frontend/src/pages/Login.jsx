@@ -14,7 +14,10 @@ function Login() {
     e.preventDefault();
     try {
       const res = await loginUser({ email, password });
-      login(res.data.token, res.data.user); // store token + user
+
+      // 🔥 FIXED: use res instead of response, and correct argument order
+      login(res.data.user, res.data.token);
+
       setMessage(res.data.message || "Login successful!");
       setTimeout(() => navigate("/"), 1000);
     } catch (err) {

@@ -8,7 +8,13 @@ const Requests = () => {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get(`/api/connection/received/${user._id}`);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `http://localhost:5001/api/connection/received-by-user/${user.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setRequests(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching requests:", err);
@@ -18,7 +24,14 @@ const Requests = () => {
 
   const handleAccept = async (fromId) => {
     try {
-      await axios.post(`/api/connection/accept/${user._id}/${fromId}`);
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:5001/api/connection/accept-by-user`,
+        { userId: user.id, fromId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       fetchRequests();
     } catch (err) {
       console.error(err);
@@ -27,7 +40,14 @@ const Requests = () => {
 
   const handleReject = async (fromId) => {
     try {
-      await axios.post(`/api/connection/reject/${user._id}/${fromId}`);
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:5001/api/connection/reject-by-user`,
+        { userId: user.id, fromId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       fetchRequests();
     } catch (err) {
       console.error(err);
@@ -40,7 +60,7 @@ const Requests = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Connection Requests</h1>
+      <h1 className="text-2xl font-bold mb-4">Requests Received</h1>
       {requests.length === 0 ? (
         <p>No new requests.</p>
       ) : (

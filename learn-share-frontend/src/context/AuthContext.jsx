@@ -5,27 +5,26 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // ✅ add loading
+  const [loading, setLoading] = useState(true);
 
+  // Restore auth state from localStorage on mount
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    try {
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
 
-    if (token && userData && userData !== "undefined") {
-      try {
+      if (storedToken && storedUser) {
         setIsLoggedIn(true);
-        setUser(JSON.parse(userData));
-      } catch (err) {
-        console.error("Failed to parse userData:", err);
-        setIsLoggedIn(false);
-        setUser(null);
+        setUser(JSON.parse(storedUser));
       }
+    } catch (err) {
+      console.error("Error restoring auth:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false); // ✅ finished loading
   }, []);
 
-  const login = (token, userData) => {
+  const login = (userData, token) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
     setIsLoggedIn(true);
@@ -41,11 +40,9 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, user, login, logout, loading }}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
-// Hook to consume the context
 export const useAuth = () => useContext(AuthContext);
-export { AuthContext };

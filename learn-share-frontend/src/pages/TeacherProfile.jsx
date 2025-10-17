@@ -12,7 +12,9 @@ export default function TeacherProfile() {
   useEffect(() => {
     const fetchTeacher = async () => {
       try {
-        const res = await axios.get(`http://localhost:5001/api/teacher/${teacherId}`);
+        const res = await axios.get(
+          `http://localhost:5001/api/teacher/${teacherId}`
+        );
         setTeacher(res.data);
       } catch (err) {
         console.error("Error fetching teacher:", err);
@@ -26,27 +28,53 @@ export default function TeacherProfile() {
 
   const hasRequested = teacher.requestsReceived
     ?.map((id) => id.toString())
-    .includes(user?._id);
+    .includes(user?.id);
 
   const isConnected = teacher.connections
     ?.map((id) => id.toString())
-    .includes(user?._id);
+    .includes(user?.id);
 
   const handleConnect = async () => {
-    if (!user?._id) {
+    if (!user?.id) {
       alert("Please login to connect");
       navigate("/login");
       return;
     }
 
     try {
-      await axios.post(`http://localhost:5001/api/connection/send/${user._id}/${teacher._id}`);
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:5001/api/connection/send`,
+        { userId: user.id, teacherId: teacher._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setTeacher((prev) => ({
         ...prev,
-        requestsReceived: [...prev.requestsReceived, user._id],
+        requestsReceived: [...prev.requestsReceived, user.id],
       }));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!user?.id) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:5001/api/connection/disconnect`,
+        { userId: user.id, teacherId: teacher._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTeacher((prev) => ({
+        ...prev,
+        connections: prev.connections.filter((id) => id !== user.id),
+      }));
+      alert("Disconnected successfully");
+    } catch (err) {
+      console.error("Error disconnecting:", err);
+      alert("Error disconnecting");
     }
   };
 
@@ -66,12 +94,20 @@ export default function TeacherProfile() {
         )}
 
         {isConnected ? (
-          <button
-            className="w-full bg-green-500 text-white py-2 rounded-lg"
-            onClick={() => navigate(`/chat?teacher=${teacher._id}`)}
-          >
-            Chat
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
+              onClick={() => navigate(`/chat?teacher=${teacher._id}`)}
+            >
+              Chat
+            </button>
+            <button
+              className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition"
+              onClick={handleDisconnect}
+            >
+              Disconnect
+            </button>
+          </div>
         ) : hasRequested ? (
           <button className="w-full bg-yellow-500 text-white py-2 rounded-lg">
             Pending

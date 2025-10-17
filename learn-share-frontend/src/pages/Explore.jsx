@@ -27,9 +27,10 @@ function Explore() {
       const res = await axios.get("http://localhost:5001/api/teachers");
       const list = Array.isArray(res.data) ? res.data : [];
 
-      // filter out logged-in user
-      const filtered =
-        user && user._id ? list.filter((t) => t._id !== user._id) : list;
+      // filter out logged-in user (match by email to avoid id domain mismatch)
+      const filtered = user?.email
+        ? list.filter((t) => t.email !== user.email)
+        : list;
 
       // build requests map
       const reqMap = {};
@@ -41,9 +42,9 @@ function Explore() {
           ? t.connections.map(String)
           : [];
 
-        if (user && user._id) {
-          if (connections.includes(user._id)) reqMap[t._id] = "accepted";
-          else if (pending.includes(user._id)) reqMap[t._id] = "pending";
+        if (user && user.id) {
+          if (connections.includes(user.id)) reqMap[t._id] = "accepted";
+          else if (pending.includes(user.id)) reqMap[t._id] = "pending";
         }
       });
 
@@ -90,16 +91,10 @@ function Explore() {
     setSelectedLevel("");
   };
 
+  // ✅ Added loading guard inside handleConnect
   const handleConnect = async (teacherId) => {
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center min-h-screen">
-          <p>Loading...</p>
-        </div>
-      );
-    }
-    
-    if (!user || !user._id) {
+    if (loading) return;
+    if (!user) {
       alert("Please log in to send connection requests.");
       navigate("/login");
       return;
@@ -107,11 +102,11 @@ function Explore() {
 
     try {
       await axios.post(
-        `http://localhost:5001/api/connection/send/${user._id}/${teacherId}`,
-        {}, // body empty
+        `http://localhost:5001/api/connection/send`,
+        { userId: user.id, teacherId },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ add JWT here
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
@@ -138,6 +133,17 @@ function Explore() {
       alert(err.response?.data?.message || "Error disconnecting");
     }
   };
+
+  // ✅ Added loading screen before main render
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <p className="text-lg text-gray-600 font-semibold">
+          Loading, please wait...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row px-6 py-6 bg-gray-100 min-h-screen">
@@ -246,44 +252,33 @@ function Explore() {
                 </span>
               </div>
 
-              {/* ✅ Connect / Pending / Accepted buttons */}
-              {!loading &&
-                (requests[teacher._id] === "pending" ? (
-                  <button className="mt-4 w-full bg-yellow-500 text-white py-2 rounded-lg">
-                    Pending
+              {/* Chat and View Profile buttons */}
+              <div className="flex gap-2 mt-4">
+                {requests[teacher._id] === "accepted" ? (
+                  <button
+                    className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
+                    onClick={() => navigate(`/chat?teacher=${teacher._id}`)}
+                  >
+                    Chat
                   </button>
-                ) : requests[teacher._id] === "accepted" ? (
-                  <div className="flex gap-2 mt-4">
-                    <button
-                      className="w-1/2 bg-green-500 text-white py-2 rounded-lg"
-                      onClick={() => navigate(`/chat?teacher=${teacher._id}`)}
-                    >
-                      Chat
-                    </button>
-                    <button
-                      className="w-1/2 bg-red-500 text-white py-2 rounded-lg"
-                      onClick={() => handleDisconnect(teacher._id)}
-                    >
-                      Disconnect
-                    </button>
-                  </div>
                 ) : (
                   <button
-                    className="mt-4 w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 transition"
+                    className="flex-1 bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 transition"
                     onClick={() => handleConnect(teacher._id)}
                   >
                     Connect
                   </button>
-                ))}
+                )}
 
-              <button
-                onClick={() =>
-                  navigate(`/teacher/${teacher._id}`, { state: teacher })
-                }
-                className="mt-2 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition"
-              >
-                View Profile
-              </button>
+                <button
+                  onClick={() =>
+                    navigate(`/teacher/${teacher._id}`, { state: teacher })
+                  }
+                  className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition"
+                >
+                  View Profile
+                </button>
+              </div>
             </div>
           ))
         ) : (
