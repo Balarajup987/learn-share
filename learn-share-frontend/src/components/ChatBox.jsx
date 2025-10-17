@@ -1,99 +1,86 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaTimes, FaPaperPlane } from "react-icons/fa";
-import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import socket from "../socket"; // centralized socket
+import socket from "../socket";
 import axios from "axios";
 
 function ChatBox({ onClose }) {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const teacherId = searchParams.get("teacher");
-  const studentId = searchParams.get("student");
-  const [chatPartner, setChatPartner] = useState({
-    name: "Chat Partner",
-    avatar: "/default.png",
-    _id: "",
-    type: "teacher",
-  });
+  const [partners, setPartners] = useState([]); // all chat partners
+  const [currentPartner, setCurrentPartner] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [file, setFile] = useState(null);
   const chatEndRef = useRef(null);
-  const [showHistory, setShowHistory] = useState(true);
-  const partnerId = teacherId || studentId;
-  const roomId = `${user?.id}:${partnerId}`;
 
+  // Fetch all partners on load
   useEffect(() => {
-    const handleReceiveMessage = (message) => {
-      setMessages((prev) => [...prev, message]);
+    const fetchPartners = async () => {
+      try {
+        // Example: fetch all teachers as potential chat partners
+        const { data } = await axios.get("http://localhost:5001/api/teachers");
+        setPartners(data);
+      } catch (e) {
+        console.error("Error fetching partners:", e);
+      }
     };
-
-    socket.on("receiveMessage", handleReceiveMessage);
-
-    return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
-    };
+    fetchPartners();
   }, []);
 
+  // Join room & listen to messages
   useEffect(() => {
-    if (!partnerId || !user?.id) return;
-
-    // Fetch partner data (teacher or student)
-    (async () => {
-      try {
-        if (teacherId) {
-          const { data } = await axios.get(
-            `http://localhost:5001/api/teacher/${teacherId}`
-          );
-          setChatPartner({ ...data, type: "teacher" });
-        } else if (studentId) {
-          const { data } = await axios.get(
-            `http://localhost:5001/api/user/${studentId}`
-          );
-          setChatPartner({ ...data, type: "student" });
-        }
-      } catch (e) {
-        console.error("Error fetching partner:", e);
+    socket.on("receiveMessage", (msg) => {
+      if (
+        currentPartner &&
+        (msg.senderId === currentPartner._id || msg.toTeacherId === currentPartner._id)
+      ) {
+        setMessages((prev) => [...prev, msg]);
       }
-    })();
+    });
 
-    socket.emit("joinRoom", roomId);
-    // fetch history
-    (async () => {
-      try {
-        const { data } = await axios.get(
-          `http://localhost:5001/api/chat/history?userId=${user.id}&teacherId=${partnerId}`
-        );
-        const mapped = (data || []).map((m) => ({
-          text: m.text,
-          file: m.file,
-          senderId: m.fromUserId,
-          time: m.time,
-        }));
-        setMessages(mapped);
-      } catch (e) {
-        // ignore
-      }
-    })();
-  }, [partnerId, user?.id]);
+    return () => {
+      socket.off("receiveMessage");
+    };
+  }, [currentPartner]);
 
+  // Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Select a partner
+  const selectPartner = async (partner) => {
+    setCurrentPartner(partner);
+    const roomId = `${user.id}:${partner._id}`;
+    socket.emit("joinRoom", roomId);
+
+    // Fetch chat history
+    try {
+      const { data } = await axios.get(
+        `http://localhost:5001/api/chat/history?userId=${user.id}&teacherId=${partner._id}`
+      );
+      const mapped = (data || []).map((m) => ({
+        text: m.text,
+        file: m.file,
+        senderId: m.fromUserId,
+        time: m.time,
+      }));
+      setMessages(mapped);
+    } catch (e) {
+      console.error("Error fetching history:", e);
+      setMessages([]);
+    }
+  };
+
   const sendMessage = () => {
     if (!input && !file) return;
-    if (!partnerId) {
-      console.error("No partner ID");
-      return;
-    }
+    if (!currentPartner) return;
 
     const messageData = {
-      roomId,
+      roomId: `${user.id}:${currentPartner._id}`,
       text: input || "",
-      sender: user.name,
-      toTeacherId: partnerId,
+      senderId: user.id,
+      toTeacherId: currentPartner._id,
       time: new Date(),
     };
 
@@ -101,10 +88,7 @@ function ChatBox({ onClose }) {
       const reader = new FileReader();
       reader.onload = () => {
         messageData.file = { name: file.name, data: reader.result };
-        socket.emit("sendMessage", {
-          ...messageData,
-          file: { name: file.name, data: reader.result },
-        });
+        socket.emit("sendMessage", messageData);
         setFile(null);
       };
       reader.readAsDataURL(file);
@@ -121,184 +105,135 @@ function ChatBox({ onClose }) {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* WhatsApp-style Chat History Sidebar */}
-      {showHistory && (
-        <div className="w-1/4 bg-gray-50 shadow-md border-r flex flex-col">
-          <div className="bg-gray-100 p-3 flex justify-between items-center border-b">
-            <h3 className="font-semibold text-gray-800">Chats</h3>
-            <button
-              className="text-sm text-indigo-600 hover:text-indigo-800"
-              onClick={() => setShowHistory(false)}
-            >
-              ✕
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {messages.length > 0 ? (
-              <div className="p-2">
-                <div className="bg-white rounded-lg shadow-sm p-3 mb-2 hover:bg-gray-50 cursor-pointer">
-                  <div className="flex items-center space-x-3">
-                    <img
-                      src={
-                        chatPartner.type === "teacher" && chatPartner.idFile
-                          ? `http://localhost:5001/uploads/${chatPartner.idFile}`
-                          : chatPartner.type === "teacher"
-                          ? "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-                          : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-                      }
-                      alt={chatPartner.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {chatPartner.name}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {messages[messages.length - 1]?.text || "Attachment"}
-                      </p>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {new Date(
-                        messages[messages.length - 1]?.time
-                      ).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 text-center text-gray-500">
-                <p className="text-sm">No chat history yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Teacher Profile Section */}
-      <div className="w-1/4 bg-white shadow-md p-6 flex flex-col items-center">
-        <img
-          src={
-            chatPartner.type === "teacher" && chatPartner.idFile
-              ? `http://localhost:5001/uploads/${chatPartner.idFile}`
-              : chatPartner.type === "teacher"
-              ? "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
-              : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
-          }
-          alt={chatPartner.name}
-          className="w-24 h-24 rounded-full mb-4 border-4 border-indigo-600 object-cover"
-        />
-        <h2 className="text-xl font-semibold">{chatPartner.name}</h2>
-        <p className="text-gray-500">Available for chat</p>
-        {!showHistory && (
-          <button
-            className="mt-4 text-indigo-600"
-            onClick={() => setShowHistory(true)}
-          >
-            Show History
-          </button>
-        )}
-      </div>
-
-      {/* Chat Section */}
-      <div className="flex-1 flex flex-col border-l bg-white">
-        {/* Header */}
-        <div className="bg-indigo-600 text-white px-4 py-3 flex justify-between items-center">
-          <span>Chat with {chatPartner.name}</span>
-          <button onClick={onClose}>
-            <FaTimes className="text-white hover:text-gray-200" />
+      {/* Sidebar: Chat partners */}
+      <div className="w-1/4 bg-gray-50 shadow-md border-r flex flex-col">
+        <div className="bg-gray-100 p-3 flex justify-between items-center border-b">
+          <h3 className="font-semibold text-gray-800">Chats</h3>
+          <button className="text-sm text-indigo-600 hover:text-indigo-800" onClick={onClose}>
+            ✕
           </button>
         </div>
-
-        {/* Messages */}
-        <div className="flex-1 p-4 overflow-y-auto">
-          {messages.length === 0 && (
-            <p className="text-gray-400 text-center">No messages yet...</p>
-          )}
-          {messages.map((msg, i) => (
+        <div className="flex-1 overflow-y-auto">
+          {partners.map((p) => (
             <div
-              key={i}
-              className={`mb-4 flex ${
-                msg.sender === user?.name ? "justify-end" : "justify-start"
+              key={p._id}
+              className={`flex items-center p-3 hover:bg-gray-100 cursor-pointer ${
+                currentPartner?._id === p._id ? "bg-gray-200" : ""
               }`}
+              onClick={() => selectPartner(p)}
             >
-              {msg.sender !== user?.name && (
-                <img
-                  src={
-                    chatPartner.type === "teacher" && chatPartner.idFile
-                      ? `http://localhost:5001/uploads/${chatPartner.idFile}`
-                      : chatPartner.type === "teacher"
-                      ? "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-                      : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-                  }
-                  alt={chatPartner.name}
-                  className="w-8 h-8 rounded-full mr-2"
-                />
-              )}
-              <div
-                className={`p-3 rounded-lg max-w-xs ${
-                  msg.sender === user?.name
-                    ? "bg-indigo-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                {msg.text && <p>{msg.text}</p>}
-                {msg.file && msg.file.data.startsWith("data:image") && (
-                  <img
-                    src={msg.file.data}
-                    alt="sent"
-                    className="w-32 rounded mt-2"
-                  />
-                )}
-                {msg.file && msg.file.data.startsWith("data:audio") && (
-                  <audio controls className="mt-2">
-                    <source src={msg.file.data} type="audio/mpeg" />
-                  </audio>
-                )}
-                <span className="text-xs block mt-1 opacity-70">
-                  {new Date(msg.time).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
+              <img
+                src={
+                  p.idFile
+                    ? `http://localhost:5001/uploads/${p.idFile}`
+                    : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
+                }
+                alt={p.name}
+                className="w-10 h-10 rounded-full object-cover mr-3"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
+                <p className="text-xs text-gray-500 truncate">
+                  {messages.find((m) => m.senderId === p._id)?.text || "No messages"}
+                </p>
               </div>
-              {msg.sender === user?.name && (
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-                  alt="You"
-                  className="w-8 h-8 rounded-full ml-2 object-cover"
-                />
-              )}
             </div>
           ))}
-          <div ref={chatEndRef}></div>
         </div>
+      </div>
 
-        {/* Input */}
-        <div className="flex items-center p-3 border-t bg-gray-50">
-          <input
-            type="file"
-            accept="image/*,audio/*"
-            onChange={(e) => setFile(e.target.files[0])}
-            className="mr-2"
-          />
-          <input
-            type="text"
-            placeholder="Type a message"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            className="flex-1 border rounded px-3 py-2 text-sm"
-          />
-          <button
-            onClick={sendMessage}
-            className="bg-indigo-600 text-white px-4 py-2 rounded ml-2 hover:bg-indigo-700 flex items-center"
-          >
-            <FaPaperPlane />
-          </button>
-        </div>
+      {/* Main Chat Section */}
+      <div className="flex-1 flex flex-col border-l bg-white">
+        {currentPartner ? (
+          <>
+            {/* Header */}
+            <div className="bg-indigo-600 text-white px-4 py-3 flex justify-between items-center">
+              <span>Chat with {currentPartner.name}</span>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              {messages.length === 0 && (
+                <p className="text-gray-400 text-center">No messages yet...</p>
+              )}
+              {messages.map((msg, i) => {
+                const isMe = msg.senderId === user.id;
+                return (
+                  <div key={i} className={`mb-4 flex ${isMe ? "justify-end" : "justify-start"}`}>
+                    {!isMe && (
+                      <img
+                        src={
+                          currentPartner.idFile
+                            ? `http://localhost:5001/uploads/${currentPartner.idFile}`
+                            : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
+                        }
+                        alt={currentPartner.name}
+                        className="w-8 h-8 rounded-full mr-2"
+                      />
+                    )}
+                    <div
+                      className={`p-3 rounded-lg max-w-xs ${
+                        isMe ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      {msg.text && <p>{msg.text}</p>}
+                      {msg.file && msg.file.data.startsWith("data:image") && (
+                        <img src={msg.file.data} alt="sent" className="w-32 rounded mt-2" />
+                      )}
+                      {msg.file && msg.file.data.startsWith("data:audio") && (
+                        <audio controls className="mt-2">
+                          <source src={msg.file.data} type="audio/mpeg" />
+                        </audio>
+                      )}
+                      <span className="text-xs block mt-1 opacity-70">
+                        {new Date(msg.time).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    {isMe && (
+                      <img
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
+                        alt="You"
+                        className="w-8 h-8 rounded-full ml-2 object-cover"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+              <div ref={chatEndRef}></div>
+            </div>
+
+            {/* Input */}
+            <div className="flex items-center p-3 border-t bg-gray-50">
+              <input
+                type="file"
+                accept="image/*,audio/*"
+                onChange={(e) => setFile(e.target.files[0])}
+                className="mr-2"
+              />
+              <input
+                type="text"
+                placeholder="Type a message"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="flex-1 border rounded px-3 py-2 text-sm"
+              />
+              <button
+                onClick={sendMessage}
+                className="bg-indigo-600 text-white px-4 py-2 rounded ml-2 hover:bg-indigo-700 flex items-center"
+              >
+                <FaPaperPlane />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-400">
+            Select a chat to start messaging
+          </div>
+        )}
       </div>
     </div>
   );

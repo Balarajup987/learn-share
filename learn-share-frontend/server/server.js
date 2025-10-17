@@ -13,6 +13,7 @@ import authRoutes from "./routes/authRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import connectionRoutes from "./routes/connectionRoutes.js";
 import ChatMessage from "./models/ChatMessage.js";
+import User from "./models/User.js"; // Added User import
 
 dotenv.config();
 
@@ -22,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: ["http://localhost:5173", "http://localhost:5174"], credentials: true }));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -62,7 +63,7 @@ app.get("/", (req, res) => res.send("Server running"));
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -106,6 +107,7 @@ io.on("connection", (socket) => {
         time: new Date(),
       });
       await message.save();
+
       io.to(roomId).emit("receiveMessage", {
         text: message.text,
         file: message.file,
@@ -122,18 +124,26 @@ io.on("connection", (socket) => {
   });
 });
 
-// Chat history endpoint
+// Chat history endpoint (fixed)
 app.get("/api/chat/history", async (req, res) => {
   try {
     const { userId, teacherId } = req.query;
     if (!userId || !teacherId)
       return res.status(400).json({ message: "userId and teacherId required" });
-    const roomId = `${userId}:${teacherId}`;
-    const messages = await ChatMessage.find({ roomId })
-      .sort({ createdAt: 1 })
+
+    // Fetch messages in both directions
+    const messages = await ChatMessage.find({
+      $or: [
+        { fromUserId: userId, toTeacherId: teacherId },
+        { fromUserId: teacherId, toTeacherId: userId },
+      ],
+    })
+      .sort({ time: 1 }) // ascending
       .lean();
+
     res.json(messages);
   } catch (e) {
+    console.error(e);
     res.status(500).json({ message: "Server error" });
   }
 });
