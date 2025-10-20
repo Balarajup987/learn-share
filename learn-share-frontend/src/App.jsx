@@ -13,24 +13,30 @@ import TeacherProfile from "./pages/TeacherProfile";
 import ChatBox from "./components/ChatBox";
 import ScrollToTop from "./components/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import Requests from "./pages/Requests";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import ProfileUpdate from "./pages/ProfileUpdate";
+import Complaints from "./pages/Complaints";
 import MyCourses from "./pages/MyCourses";
 import Connections from "./pages/Connections";
+import DebugConnections from "./pages/DebugConnections";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        {/* Scroll to top on route change */}
-        <ScrollToTop />
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          {/* Scroll to top on route change */}
+          <ScrollToTop />
 
-        {/* Navbar on all pages */}
-        <Navbar />
+          {/* Navbar on all pages */}
+          <Navbar />
 
-        {/* Add top padding for navbar height */}
-        <div className="pt-24">
+          {/* Add top padding for navbar height */}
+          <div className="pt-24">
           <Routes>
             {/* Home Page */}
             <Route
@@ -98,6 +104,52 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/chat/:teacherId"
+              element={
+                <ProtectedRoute>
+                  <ChatBox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/debug"
+              element={
+                <ProtectedRoute>
+                  <DebugConnections />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin Dashboard */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Profile Update */}
+            <Route
+              path="/profile-update"
+              element={
+                <ProtectedRoute>
+                  <ProfileUpdate />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Complaints */}
+            <Route
+              path="/complaints"
+              element={
+                <ProtectedRoute>
+                  <Complaints />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Auth Pages */}
             <Route path="/login" element={<Login />} />
@@ -119,6 +171,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

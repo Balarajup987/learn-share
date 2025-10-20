@@ -5,10 +5,15 @@ function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match");
+      return;
+    }
     try {
       const res = await signupUser({ name, email, password });
       setMessage(res.data.message || "User created successfully!");
@@ -52,6 +57,15 @@ function Signup() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
           />
           <button
             type="submit"

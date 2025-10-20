@@ -12,6 +12,8 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import connectionRoutes from "./routes/connectionRoutes.js";
+import usersRoutes from "./routes/usersRoutes.js";
+import complaintRoutes from "./routes/complaintRoutes.js";
 import ChatMessage from "./models/ChatMessage.js";
 import User from "./models/User.js"; // Added User import
 
@@ -23,7 +25,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(cors({ origin: ["http://localhost:5173", "http://localhost:5174"], credentials: true }));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -40,13 +52,13 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/connection", connectionRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/complaints", complaintRoutes);
 
-// Teachers & Skills
-import Teacher from "./models/Teacher.js";
-
+// Teachers & Skills (backed by unified User model)
 app.get("/api/teachers", async (req, res) => {
   try {
-    const teachers = await Teacher.find();
+    const teachers = await User.find({ role: { $in: ["teacher", "both"] } });
     res.json(teachers);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -63,7 +75,11 @@ app.get("/", (req, res) => res.send("Server running"));
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -91,17 +107,18 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", async (payload) => {
     try {
-      const { roomId, text, file, toTeacherId } = payload;
+      const { roomId, text, file, toTeacherId, toUserId } = payload;
+      const recipientId = toUserId || toTeacherId; // back-compat for older clients
 
-      if (!toTeacherId || toTeacherId === "") {
-        console.error("Invalid toTeacherId:", toTeacherId);
+      if (!recipientId || recipientId === "") {
+        console.error("Invalid recipient:", recipientId);
         return;
       }
 
       const message = new ChatMessage({
         roomId,
         fromUserId: socket.userId,
-        toTeacherId,
+        toUserId: recipientId,
         text: text || "",
         file: file || null,
         time: new Date(),
@@ -124,18 +141,20 @@ io.on("connection", (socket) => {
   });
 });
 
-// Chat history endpoint (fixed)
+// Chat history endpoint (unified user↔user)
 app.get("/api/chat/history", async (req, res) => {
   try {
-    const { userId, teacherId } = req.query;
-    if (!userId || !teacherId)
-      return res.status(400).json({ message: "userId and teacherId required" });
+    const { userId, teacherId, otherUserId } = req.query;
+    const peerId = otherUserId || teacherId;
+    if (!userId || !peerId)
+      return res
+        .status(400)
+        .json({ message: "userId and otherUserId required" });
 
-    // Fetch messages in both directions
     const messages = await ChatMessage.find({
       $or: [
-        { fromUserId: userId, toTeacherId: teacherId },
-        { fromUserId: teacherId, toTeacherId: userId },
+        { fromUserId: userId, toUserId: peerId },
+        { fromUserId: peerId, toUserId: userId },
       ],
     })
       .sort({ time: 1 }) // ascending
@@ -159,10 +178,13 @@ app.get("/api/user/:userId", async (req, res) => {
   }
 });
 
-// Get teacher by email
+// Get teacher by email (unified)
 app.get("/api/teacher/by-email/:email", async (req, res) => {
   try {
-    const teacher = await Teacher.findOne({ email: req.params.email });
+    const teacher = await User.findOne({
+      email: req.params.email,
+      role: { $in: ["teacher", "both"] },
+    });
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
     res.json(teacher);
   } catch (e) {

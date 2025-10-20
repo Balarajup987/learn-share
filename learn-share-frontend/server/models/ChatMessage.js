@@ -3,8 +3,16 @@ import mongoose from "mongoose";
 const chatMessageSchema = new mongoose.Schema(
   {
     roomId: { type: String, index: true },
-    fromUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    toTeacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
+    fromUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    toUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     text: String,
     file: {
       name: String,
@@ -16,4 +24,3 @@ const chatMessageSchema = new mongoose.Schema(
 );
 
 export default mongoose.model("ChatMessage", chatMessageSchema);
-

@@ -1,209 +1,344 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { Link } from "react-router-dom";
+import { fetchUserConnections, disconnectConnection } from "../api";
 
-function Connections() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+const Connections = () => {
+  const { user, isLoggedIn } = useAuth();
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterMode, setFilterMode] = useState("all"); // all, online, offline
 
   useEffect(() => {
-    const fetchConnections = async () => {
-      if (!user?.id) return;
+    if (isLoggedIn && user) {
+      fetchConnections();
+    }
+  }, [isLoggedIn, user]);
 
-      try {
-        const token = localStorage.getItem("token");
+  const fetchConnections = async () => {
+    try {
+      setLoading(true);
 
-        // Get user's connected teachers
-        const userRes = await axios.get(
-          `http://localhost:5001/api/user/${user.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+      // Fetch user connections using the new API
+      const response = await fetchUserConnections(user.id);
+      const connectionsData = response.data.connections || [];
 
-        const teacherIds = userRes.data.connectedTeachers || [];
-        const teacherConnections = [];
+      // Map connections with additional data
+      const populated = connectionsData.map((c) => ({
+        ...c,
+        type: c.role === "teacher" || c.role === "both" ? "teacher" : "student",
+        lastMessage: c.lastMessage || "Say hello!",
+        lastMessageTime: new Date(),
+        isOnline: Math.random() > 0.3,
+      }));
 
-        if (teacherIds.length > 0) {
-          const teachersData = await Promise.all(
-            teacherIds.map((id) =>
-              axios.get(`http://localhost:5001/api/teacher/${id}`)
-            )
-          );
-          teacherConnections.push(
-            ...teachersData.map((res) => ({ ...res.data, type: "teacher" }))
-          );
-        }
+      const allConnections = populated.sort(
+        (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+      );
 
-        // Get user's teacher profile and their connected students
-        try {
-          const teacherRes = await axios.get(
-            `http://localhost:5001/api/teacher/by-email/${user.email}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+      setConnections(allConnections);
+    } catch (error) {
+      console.error("Error fetching connections:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-          if (teacherRes.data) {
-            const studentIds = teacherRes.data.connections || [];
-            if (studentIds.length > 0) {
-              const studentsData = await Promise.all(
-                studentIds.map((id) =>
-                  axios.get(`http://localhost:5001/api/user/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                  })
-                )
-              );
-              teacherConnections.push(
-                ...studentsData.map((res) => ({ ...res.data, type: "student" }))
-              );
-            }
-          }
-        } catch (err) {
-          // User is not a teacher, that's fine
-        }
+  const filteredConnections = connections.filter((connection) => {
+    const matchesSearch =
+      connection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      connection.categories?.some((cat) =>
+        cat.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-        setConnections(teacherConnections);
-      } catch (err) {
-        console.error("Error fetching connections:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (filterMode === "online") return matchesSearch && connection.isOnline;
+    if (filterMode === "offline") return matchesSearch && !connection.isOnline;
+    return matchesSearch;
+  });
 
-    fetchConnections();
-  }, [user]);
+  const formatLastMessageTime = (date) => {
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100">
+        <div className="text-center bg-white p-8 rounded-2xl shadow-xl">
+          <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-purple-600 text-3xl">👥</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Access Your Connections
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Please log in to view your learning connections
+          </p>
+          <Link
+            to="/login"
+            className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          >
+            Login to Continue
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading connections...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your connections...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Connections</h1>
-          <p className="text-gray-600">Your connected teachers and students</p>
-        </div>
-      </div>
-
-      {/* Connections List */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {connections.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="mx-auto h-24 w-24 text-gray-400">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                Your Learning Network 👥
+              </h1>
+              <p className="text-gray-600 text-lg">
+                Connect and learn with teachers and fellow students
+              </p>
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900">
-              No connections yet
-            </h3>
-            <p className="mt-2 text-gray-500">
-              Connect with teachers or students to start chatting
-            </p>
-            <div className="mt-6">
+            <div className="hidden md:block">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Active Connections</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {connections.filter((c) => c.isOnline).length} Online
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search connections by name or subject..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-400">🔍</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
               <button
-                onClick={() => navigate("/explore")}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={() => setFilterMode("all")}
+                className={`px-4 py-3 rounded-lg font-medium transition-colors ${
+                  filterMode === "all"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
               >
-                Explore Teachers
+                All ({connections.length})
+              </button>
+              <button
+                onClick={() => setFilterMode("online")}
+                className={`px-4 py-3 rounded-lg font-medium transition-colors ${
+                  filterMode === "online"
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Online ({connections.filter((c) => c.isOnline).length})
+              </button>
+              <button
+                onClick={() => setFilterMode("offline")}
+                className={`px-4 py-3 rounded-lg font-medium transition-colors ${
+                  filterMode === "offline"
+                    ? "bg-gray-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Offline ({connections.filter((c) => !c.isOnline).length})
               </button>
             </div>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {connections.map((connection) => (
-              <div
-                key={connection._id}
-                className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => {
-                  if (connection.type === "teacher") {
-                    navigate(`/chat?teacher=${connection._id}`);
-                  } else {
-                    // For students, we need to find their teacher profile
-                    navigate(`/chat?student=${connection._id}`);
-                  }
-                }}
-              >
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={
-                      connection.type === "teacher" && connection.idFile
-                        ? `http://localhost:5001/uploads/${connection.idFile}`
-                        : connection.type === "teacher"
-                        ? "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
-                        : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face"
-                    }
-                    alt={connection.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="text-lg font-medium text-gray-900 truncate">
-                        {connection.name}
-                      </h3>
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+        </div>
+
+        {/* Connections List */}
+        {filteredConnections.length > 0 ? (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600">
+              <h2 className="text-xl font-semibold text-white">
+                {filterMode === "all"
+                  ? "All Connections"
+                  : filterMode === "online"
+                  ? "Online Now"
+                  : "Recently Active"}
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {filteredConnections.map((connection, index) => (
+                <div
+                  key={connection._id || index}
+                  className="p-6 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    {/* Avatar */}
+                    <div className="relative">
+                      <div
+                        className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold ${
                           connection.type === "teacher"
-                            ? "bg-indigo-100 text-indigo-800"
-                            : "bg-green-100 text-green-800"
+                            ? "bg-gradient-to-r from-green-500 to-blue-500"
+                            : "bg-gradient-to-r from-purple-500 to-pink-500"
                         }`}
                       >
-                        {connection.type === "teacher" ? "Teacher" : "Student"}
-                      </span>
+                        {connection.name?.charAt(0)}
+                      </div>
+                      {connection.isOnline && (
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500 truncate">
-                      {connection.type === "teacher"
-                        ? connection.categories?.join(", ") || connection.email
-                        : connection.email}
-                    </p>
-                    {connection.type === "teacher" && connection.experience && (
-                      <p className="text-xs text-gray-400">
-                        {connection.experience}
+
+                    {/* Connection Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          {connection.name}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            connection.type === "teacher"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-purple-100 text-purple-800"
+                          }`}
+                        >
+                          {connection.type === "teacher"
+                            ? "Teacher"
+                            : "Student"}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-2">
+                        {connection.categories?.join(", ") ||
+                          "Learning together"}
                       </p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
+                      <p className="text-gray-500 text-sm truncate">
+                        {connection.lastMessage}
+                      </p>
+                    </div>
+
+                    {/* Time and Actions */}
+                    <div className="flex flex-col items-end space-y-2">
+                      <span className="text-xs text-gray-500">
+                        {formatLastMessageTime(connection.lastMessageTime)}
+                      </span>
+                      <div className="flex space-x-2">
+                        <Link
+                          to={`/chat/${connection._id}`}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
+                        >
+                          Chat
+                        </Link>
+                        {connection.type === "teacher" && (
+                          <Link
+                            to={`/teacher/${connection._id}`}
+                            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium transition-colors"
+                          >
+                            Profile
+                          </Link>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-gray-400 text-4xl">👥</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              {searchTerm ? "No matching connections" : "No connections yet"}
+            </h3>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              {searchTerm
+                ? "Try adjusting your search terms or filters."
+                : "Start building your learning network by connecting with teachers and students."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/explore"
+                className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              >
+                Find Teachers
+              </Link>
+              <Link
+                to="/dashboard"
+                className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Stats */}
+        {connections.length > 0 && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-green-600 text-xl">👨‍🏫</span>
               </div>
-            ))}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Teachers
+              </h3>
+              <p className="text-3xl font-bold text-green-600">
+                {connections.filter((c) => c.type === "teacher").length}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-purple-600 text-xl">👨‍🎓</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Students
+              </h3>
+              <p className="text-3xl font-bold text-purple-600">
+                {connections.filter((c) => c.type === "student").length}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-blue-600 text-xl">💬</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Active Chats
+              </h3>
+              <p className="text-3xl font-bold text-blue-600">
+                {connections.filter((c) => c.isOnline).length}
+              </p>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
-}
+};
 
 export default Connections;

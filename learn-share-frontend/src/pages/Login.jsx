@@ -4,10 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
-  const { login } = useAuth(); 
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -22,6 +25,21 @@ function Login() {
       setTimeout(() => navigate("/"), 1000);
     } catch (err) {
       setMessage(err.response?.data?.message || "Login failed");
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://localhost:5001/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      const data = await res.json();
+      setResetMessage(data.message || "Password reset email sent!");
+    } catch (err) {
+      setResetMessage("Error sending reset email");
     }
   };
 
@@ -89,6 +107,46 @@ function Login() {
         {/* Feedback message */}
         {message && (
           <p className="text-white mt-4 text-center font-medium">{message}</p>
+        )}
+
+        {/* Forgot Password Link */}
+        <p className="text-gray-200 mt-6 text-center">
+          <button
+            onClick={() => setShowForgotPassword(!showForgotPassword)}
+            className="text-blue-300 hover:underline font-semibold"
+          >
+            Forgot Password?
+          </button>
+        </p>
+
+        {/* Forgot Password Form */}
+        {showForgotPassword && (
+          <div className="mt-6 p-4 bg-white/10 backdrop-blur-lg rounded-2xl">
+            <h3 className="text-white text-lg font-semibold mb-4 text-center">
+              Reset Password
+            </h3>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              />
+              <button
+                type="submit"
+                className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-all duration-300"
+              >
+                Send Reset Email
+              </button>
+            </form>
+            {resetMessage && (
+              <p className="text-white mt-4 text-center font-medium">
+                {resetMessage}
+              </p>
+            )}
+          </div>
         )}
 
         {/* Signup link */}

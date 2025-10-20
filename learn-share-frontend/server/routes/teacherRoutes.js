@@ -1,5 +1,5 @@
 import express from "express";
-import Teacher from "../models/Teacher.js";
+import User from "../models/User.js";
 import multer from "multer";
 import path from "path";
 
@@ -16,30 +16,48 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// === Register Teacher ===
+// === Register/Update Teacher Profile on User ===
 router.post("/register", upload.single("idFile"), async (req, res) => {
   try {
-    const { name, email, categories, experience, bio, mode, github, linkedin, website } = req.body;
-
-    if (!name || !email || !categories || categories.length === 0) {
-      return res.status(400).json({ message: "Please fill all required fields" });
-    }
-
-    const teacher = new Teacher({
+    const {
       name,
       email,
-      categories: Array.isArray(categories) ? categories : categories.split(","),
+      categories,
       experience,
       bio,
       mode,
       github,
       linkedin,
       website,
-      idFile: req.file ? req.file.filename : "", // store only file name
-    });
+    } = req.body;
 
-    await teacher.save();
-    res.status(201).json({ message: "Teacher registered successfully", teacher });
+    if (!name || !email || !categories || categories.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Please fill all required fields" });
+    }
+
+    let user = await User.findOne({ email });
+    if (!user)
+      return res.status(404).json({ message: "User not found for email" });
+
+    user.name = name || user.name;
+    user.role = user.role === "student" ? "both" : user.role; // upgrade role
+    user.categories = Array.isArray(categories)
+      ? categories
+      : categories
+      ? categories.split(",")
+      : user.categories;
+    user.experience = experience ?? user.experience;
+    user.bio = bio ?? user.bio;
+    user.mode = mode ?? user.mode;
+    user.github = github ?? user.github;
+    user.linkedin = linkedin ?? user.linkedin;
+    user.website = website ?? user.website;
+    if (req.file) user.idFile = req.file.filename;
+
+    await user.save();
+    res.status(201).json({ message: "Teacher profile updated", teacher: user });
   } catch (err) {
     console.error("Error registering teacher:", err);
     res.status(500).json({ message: "Server error" });
@@ -49,7 +67,7 @@ router.post("/register", upload.single("idFile"), async (req, res) => {
 // === Get All Teachers ===
 router.get("/", async (req, res) => {
   try {
-    const teachers = await Teacher.find();
+    const teachers = await User.find({ role: { $in: ["teacher", "both"] } });
     res.json(teachers);
   } catch (err) {
     console.error("Error fetching teachers:", err);
@@ -60,7 +78,7 @@ router.get("/", async (req, res) => {
 // === Get Single Teacher by ID ===
 router.get("/:id", async (req, res) => {
   try {
-    const teacher = await Teacher.findById(req.params.id);
+    const teacher = await User.findById(req.params.id);
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
     res.json(teacher);
   } catch (err) {
@@ -72,9 +90,11 @@ router.get("/:id", async (req, res) => {
 // === Get Pending Requests for Teacher ===
 router.get("/requests/:teacherId", async (req, res) => {
   try {
-    const teacher = await Teacher.findById(req.params.teacherId).populate("pendingRequests");
+    const teacher = await User.findById(req.params.teacherId).populate(
+      "requestsReceived"
+    );
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
-    res.json(teacher.pendingRequests);
+    res.json(teacher.requestsReceived);
   } catch (err) {
     console.error("Error fetching requests:", err);
     res.status(500).json({ message: "Error fetching requests" });

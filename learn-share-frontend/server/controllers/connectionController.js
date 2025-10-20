@@ -1,28 +1,46 @@
 import User from "../models/User.js";
-import Teacher from "../models/Teacher.js";
 
-// 📩 Send connection request
+// 📩 Send connection request (User to User)
 export const sendConnectionRequest = async (req, res) => {
   try {
-    const { userId, teacherId } = req.body;
+    const { userId, targetUserId } = req.body;
+
+    if (!userId || !targetUserId)
+      return res.status(400).json({ message: "userId and targetUserId are required" });
+
+    if (userId === targetUserId)
+      return res.status(400).json({ message: "You cannot send a request to yourself" });
 
     const user = await User.findById(userId);
-    const teacher = await Teacher.findById(teacherId);
+    const target = await User.findById(targetUserId);
 
-    if (!user || !teacher)
-      return res.status(404).json({ message: "User or Teacher not found" });
+    if (!user || !target)
+      return res.status(404).json({ message: "User not found" });
 
-    if (teacher.pendingRequests.includes(userId))
-      return res.status(400).json({ message: "Request already sent" });
-
-    if (teacher.followers.includes(userId))
+    // Check if already connected
+    if (
+      user.connections.some((id) => id.toString() === targetUserId.toString()) &&
+      target.connections.some((id) => id.toString() === userId.toString())
+    ) {
       return res.status(400).json({ message: "Already connected" });
+    }
 
-    teacher.pendingRequests.push(userId);
-    user.sentRequests.push(teacherId);
+    // Check if request already sent
+    if (
+      target.requestsReceived.some((id) => id.toString() === userId.toString()) ||
+      user.sentRequests.some((id) => id.toString() === targetUserId.toString())
+    ) {
+      return res.status(400).json({ message: "Request already sent" });
+    }
 
-    await teacher.save();
+    // Add to sentRequests and requestsReceived
+    if (!user.sentRequests.some((id) => id.toString() === targetUserId.toString()))
+      user.sentRequests.push(targetUserId);
+    if (!target.requestsReceived.some((id) => id.toString() === userId.toString()))
+      target.requestsReceived.push(userId);
+
     await user.save();
+    await target.save();
 
     res.status(200).json({ message: "Connection request sent successfully" });
   } catch (error) {
@@ -34,25 +52,30 @@ export const sendConnectionRequest = async (req, res) => {
 // ✅ Accept connection request
 export const acceptConnectionRequest = async (req, res) => {
   try {
-    const { userId, teacherId } = req.body;
+    const { targetUserId, fromUserId } = req.body; // target accepts from fromUserId
 
-    const user = await User.findById(userId);
-    const teacher = await Teacher.findById(teacherId);
+    const target = await User.findById(targetUserId);
+    const fromUser = await User.findById(fromUserId);
 
-    if (!user || !teacher)
-      return res.status(404).json({ message: "User or Teacher not found" });
+    if (!target || !fromUser)
+      return res.status(404).json({ message: "User not found" });
 
-    // Remove from pendingRequests and add to followers
-    teacher.pendingRequests = teacher.pendingRequests.filter(
-      (id) => id.toString() !== userId
+    // Remove from pending/sent
+    target.requestsReceived = target.requestsReceived.filter(
+      (id) => id.toString() !== fromUserId
     );
-    teacher.followers.push(userId);
+    fromUser.sentRequests = fromUser.sentRequests.filter(
+      (id) => id.toString() !== targetUserId
+    );
 
-    // Add to connectedTeachers for user
-    user.connectedTeachers.push(teacherId);
+    // Add to connections both sides
+    if (!target.connections.some((id) => id.toString() === fromUserId.toString()))
+      target.connections.push(fromUserId);
+    if (!fromUser.connections.some((id) => id.toString() === targetUserId.toString()))
+      fromUser.connections.push(targetUserId);
 
-    await teacher.save();
-    await user.save();
+    await target.save();
+    await fromUser.save();
 
     res.status(200).json({ message: "Connection accepted successfully" });
   } catch (error) {
@@ -64,13 +87,25 @@ export const acceptConnectionRequest = async (req, res) => {
 // 🔍 Get connection status
 export const getConnectionStatus = async (req, res) => {
   try {
-    const { userId, teacherId } = req.params;
+    const { userId, targetUserId } = req.params;
 
-    const teacher = await Teacher.findById(teacherId);
-    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+    const user = await User.findById(userId);
+    const target = await User.findById(targetUserId);
 
-    if (teacher.followers.includes(userId)) return res.json({ status: "connected" });
-    if (teacher.pendingRequests.includes(userId)) return res.json({ status: "pending" });
+    if (!user || !target) return res.status(404).json({ message: "User not found" });
+
+    if (
+      user.connections.some((id) => id.toString() === targetUserId.toString()) &&
+      target.connections.some((id) => id.toString() === userId.toString())
+    ) {
+      return res.json({ status: "connected" });
+    }
+    if (
+      target.requestsReceived.some((id) => id.toString() === userId.toString()) ||
+      user.sentRequests.some((id) => id.toString() === targetUserId.toString())
+    ) {
+      return res.json({ status: "pending" });
+    }
     return res.json({ status: "none" });
   } catch (error) {
     console.error("Error checking status:", error);
@@ -81,21 +116,24 @@ export const getConnectionStatus = async (req, res) => {
 // ❌ Disconnect
 export const disconnectConnection = async (req, res) => {
   try {
-    const { userId, teacherId } = req.body;
+    const { userId, targetUserId } = req.body;
 
     const user = await User.findById(userId);
-    const teacher = await Teacher.findById(teacherId);
+    const target = await User.findById(targetUserId);
 
-    if (!user || !teacher)
-      return res.status(404).json({ message: "User or Teacher not found" });
+    if (!user || !target)
+      return res.status(404).json({ message: "User not found" });
 
-    teacher.followers = teacher.followers.filter((id) => id.toString() !== userId);
-    user.connectedTeachers = user.connectedTeachers.filter(
-      (id) => id.toString() !== teacherId
+    // Remove from connections both sides
+    user.connections = user.connections.filter(
+      (id) => id.toString() !== targetUserId
+    );
+    target.connections = target.connections.filter(
+      (id) => id.toString() !== userId
     );
 
-    await teacher.save();
     await user.save();
+    await target.save();
 
     res.status(200).json({ message: "Disconnected successfully" });
   } catch (error) {

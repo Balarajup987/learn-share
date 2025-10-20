@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { api } from "../api";
 
 const AuthContext = createContext();
 
@@ -38,8 +39,33 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (updatedUserData) => {
+    const newUser = { ...user, ...updatedUserData };
+    localStorage.setItem("user", JSON.stringify(newUser));
+    setUser(newUser);
+  };
+
+  const switchRole = async (newRole) => {
+    try {
+      const response = await api.patch("/users/role", { role: newRole });
+      updateUser({ role: response.data.role });
+      return response.data;
+    } catch (error) {
+      console.error("Error switching role:", error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout, loading }}>
+    <AuthContext.Provider value={{
+      isLoggedIn,
+      user,
+      login,
+      logout,
+      updateUser,
+      switchRole,
+      loading
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );
