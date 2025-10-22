@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {
-  fetchUser,
-  sendConnectionRequest,
-  disconnectConnection,
-} from "../api";
+import { fetchUser, sendConnectionRequest, disconnectConnection } from "../api";
+import ReportUserModal from "../components/ReportUserModal";
 
 export default function TeacherProfile() {
   const { teacherId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [teacher, setTeacher] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState("none"); // "none", "pending", "connected"
+  // Get teacher and connection status from navigation state if available
+  const passedTeacher = location.state?.teacher;
+  const passedConnectionStatus = location.state?.connectionStatus;
+
+  const [teacher, setTeacher] = useState(passedTeacher || null);
+  const [connectionStatus, setConnectionStatus] = useState(
+    passedConnectionStatus || "none"
+  ); // "none", "pending", "connected"
   const [loading, setLoading] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // ✅ Fetch teacher details
   const fetchTeacher = async () => {
@@ -58,12 +63,45 @@ export default function TeacherProfile() {
   };
 
   useEffect(() => {
-    if (teacherId) fetchTeacher();
-  }, [teacherId]);
+    // Only fetch teacher if not passed from navigation state
+    if (teacherId && !passedTeacher) {
+      fetchTeacher();
+    }
+  }, [teacherId, passedTeacher]);
 
   useEffect(() => {
-    if (teacherId && user?.id) fetchConnectionStatus();
-  }, [teacherId, user?.id]);
+    // Only fetch connection status if not passed from navigation state
+    if (teacherId && user?.id && !passedConnectionStatus) {
+      fetchConnectionStatus();
+    }
+  }, [teacherId, user?.id, passedConnectionStatus]);
+
+  // Refresh connection status when component becomes visible (only if not passed from navigation)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (
+        !document.hidden &&
+        teacherId &&
+        user?.id &&
+        !passedConnectionStatus
+      ) {
+        fetchConnectionStatus();
+      }
+    };
+
+    const handleFocus = () => {
+      if (teacherId && user?.id && !passedConnectionStatus) {
+        fetchConnectionStatus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [teacherId, user?.id, passedConnectionStatus]);
 
   if (!teacher) return <p>Loading teacher profile...</p>;
 
@@ -111,7 +149,9 @@ export default function TeacherProfile() {
       <div className="bg-white shadow-lg rounded-2xl p-6">
         <h2 className="text-2xl font-bold mb-2">{teacher.name}</h2>
         <p className="text-gray-600 mb-2">{teacher.email}</p>
-        <p className="text-sm text-blue-600 mb-2 capitalize">Role: {teacher.role}</p>
+        <p className="text-sm text-blue-600 mb-2 capitalize">
+          Role: {teacher.role}
+        </p>
         <p className="text-gray-700 mb-4">{teacher.bio}</p>
 
         {teacher.categories && teacher.categories.length > 0 && (
@@ -119,7 +159,10 @@ export default function TeacherProfile() {
             <h3 className="font-semibold mb-2">Categories:</h3>
             <div className="flex flex-wrap gap-2">
               {teacher.categories.map((cat, idx) => (
-                <span key={idx} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                <span
+                  key={idx}
+                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm"
+                >
                   {cat}
                 </span>
               ))}
@@ -153,7 +196,10 @@ export default function TeacherProfile() {
             </button>
           </div>
         ) : connectionStatus === "pending" ? (
-          <button className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 rounded-lg shadow-md" disabled>
+          <button
+            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 rounded-lg shadow-md"
+            disabled
+          >
             ⏳ Pending
           </button>
         ) : (
@@ -165,6 +211,27 @@ export default function TeacherProfile() {
             {loading ? "Sending..." : "🤝 Connect"}
           </button>
         )}
+
+        {/* Report Button */}
+        {user && user.id !== teacher._id && (
+          <button
+            className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+            onClick={() => setShowReportModal(true)}
+          >
+            🚨 Report User
+          </button>
+        )}
+
+        {/* Report Modal */}
+        <ReportUserModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          reportedUser={teacher}
+          onSuccess={() => {
+            setShowReportModal(false);
+            alert("Report submitted successfully! Admin will review it.");
+          }}
+        />
       </div>
     </div>
   );

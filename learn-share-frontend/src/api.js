@@ -39,11 +39,11 @@ export const fetchUserConnections = (userId) =>
   api.get(`/connection/user/${userId}`);
 
 // Teachers API
-export const fetchTeachers = () => axios.get(`${API_BASE}/teachers`);
+export const fetchTeachers = () => api.get(`/teachers`);
 
 // Skills API
-export const fetchSkills = () => axios.get(`${API_BASE}/skills`);
+export const fetchSkills = () => api.get(`/skills`);
 
 // Chat API
 export const fetchChatHistory = (userId, otherUserId) =>
-  axios.get(`${API_BASE}/chat/history?userId=${userId}&otherUserId=${otherUserId}`);
+  api.get(`/chat/history?userId=${userId}&otherUserId=${otherUserId}`);

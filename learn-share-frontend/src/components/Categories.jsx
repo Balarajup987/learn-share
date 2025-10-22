@@ -40,8 +40,8 @@ function Categories() {
     },
   ];
 
-  const handleChatClick = (teacher) => {
-    navigate("/chat", { state: { teacher } });
+  const handleCategoryClick = (category) => {
+    navigate("/explore", { state: { selectedSkill: category.name } });
   };
 
   return (
@@ -53,7 +53,7 @@ function Categories() {
             key={index}
             image={category.img}
             title={category.name}
-            onClick={() => handleChatClick(category)}
+            onClick={() => handleCategoryClick(category)}
           />
         ))}
       </div>

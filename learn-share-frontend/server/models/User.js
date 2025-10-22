@@ -32,6 +32,34 @@ const userSchema = new mongoose.Schema(
     // password reset
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+
+    // OTP for password reset
+    otp: String,
+    otpExpires: Date,
+
+    // User status and restrictions
+    status: {
+      type: String,
+      enum: ["active", "restricted", "blocked", "suspended"],
+      default: "active",
+    },
+
+    // Restriction details
+    restrictions: {
+      canConnect: { type: Boolean, default: true },
+      canChat: { type: Boolean, default: true },
+      canTeach: { type: Boolean, default: true },
+      canLearn: { type: Boolean, default: true },
+    },
+
+    // Admin notes about user
+    adminNotes: String,
+
+    // Warning count
+    warningCount: { type: Number, default: 0 },
+
+    // Last warning date
+    lastWarningDate: Date,
   },
   { timestamps: true }
 );

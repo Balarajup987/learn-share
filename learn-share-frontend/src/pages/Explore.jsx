@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { api, fetchUser, sendConnectionRequest, disconnectConnection } from "../api";
+import {
+  api,
+  fetchUser,
+  sendConnectionRequest,
+  disconnectConnection,
+} from "../api";
 import { useAuth } from "../context/AuthContext";
+import ReportUserModal from "../components/ReportUserModal";
 
 function Explore() {
   const navigate = useNavigate();
@@ -12,12 +18,16 @@ function Explore() {
   const [teachers, setTeachers] = useState([]);
   const [skills, setSkills] = useState([]);
   const [levels] = useState(["Beginner", "Intermediate", "Advanced"]);
-  const [selectedSkills, setSelectedSkills] = useState(skillFromCategory ? [skillFromCategory] : []);
+  const [selectedSkills, setSelectedSkills] = useState(
+    skillFromCategory ? [skillFromCategory] : []
+  );
   const [selectedLevels, setSelectedLevels] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [connectionStatuses, setConnectionStatuses] = useState({}); // { userId: "none" | "pending" | "connected" }
   const [userConnections, setUserConnections] = useState([]); // User's connected users
   const [actionLoading, setActionLoading] = useState({}); // { userId: true }
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   const getImageUrl = (idFile) => {
     if (!idFile) return "https://via.placeholder.com/300";
@@ -107,18 +117,23 @@ function Explore() {
 
   const filteredTeachers = Array.isArray(teachers)
     ? teachers.filter((teacher) => {
-        const matchesSearch = searchQuery === "" ||
+        const matchesSearch =
+          searchQuery === "" ||
           teacher.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           teacher.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          teacher.categories?.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()));
-
-        const matchesSkills = selectedSkills.length === 0 ||
-          selectedSkills.some(skill =>
-            teacher.categories?.includes(skill) || teacher.skill === skill
+          teacher.categories?.some((cat) =>
+            cat.toLowerCase().includes(searchQuery.toLowerCase())
           );
 
-        const matchesLevels = selectedLevels.length === 0 ||
-          selectedLevels.includes(teacher.level);
+        const matchesSkills =
+          selectedSkills.length === 0 ||
+          selectedSkills.some(
+            (skill) =>
+              teacher.categories?.includes(skill) || teacher.skill === skill
+          );
+
+        const matchesLevels =
+          selectedLevels.length === 0 || selectedLevels.includes(teacher.level);
 
         return matchesSearch && matchesSkills && matchesLevels;
       })
@@ -131,18 +146,14 @@ function Explore() {
   };
 
   const toggleSkill = (skill) => {
-    setSelectedSkills(prev =>
-      prev.includes(skill)
-        ? prev.filter(s => s !== skill)
-        : [...prev, skill]
+    setSelectedSkills((prev) =>
+      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
     );
   };
 
   const toggleLevel = (level) => {
-    setSelectedLevels(prev =>
-      prev.includes(level)
-        ? prev.filter(l => l !== level)
-        : [...prev, level]
+    setSelectedLevels((prev) =>
+      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
     );
   };
 
@@ -217,11 +228,11 @@ function Explore() {
           />
         </div>
 
-        {/* Skills */}
+        {/* Professional Categories */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3 text-gray-700 flex items-center">
             <span className="mr-2">🎯</span>
-            Skills (Multi-select)
+            Professional Categories
           </h3>
           <div className="max-h-40 overflow-y-auto">
             {skills.length > 0 ? (
@@ -230,8 +241,8 @@ function Explore() {
                   key={skill}
                   className={`flex items-center mb-2 cursor-pointer p-2 rounded-lg transition-colors ${
                     selectedSkills.includes(skill)
-                      ? "bg-green-100 text-green-700 font-semibold"
-                      : "hover:bg-gray-50"
+                      ? "bg-blue-100 text-blue-700 font-semibold border border-blue-200"
+                      : "hover:bg-gray-50 border border-transparent"
                   }`}
                 >
                   <input
@@ -239,13 +250,13 @@ function Explore() {
                     value={skill}
                     onChange={() => toggleSkill(skill)}
                     checked={selectedSkills.includes(skill)}
-                    className="mr-3 text-green-500"
+                    className="mr-3 text-blue-500 focus:ring-blue-500"
                   />
-                  <span className="text-sm">{skill}</span>
+                  <span className="text-sm font-medium">{skill}</span>
                 </label>
               ))
             ) : (
-              <p className="text-gray-500 text-sm">No skills available</p>
+              <p className="text-gray-500 text-sm">No categories available</p>
             )}
           </div>
         </div>
@@ -329,34 +340,36 @@ function Explore() {
               </div>
 
               {/* Chat and View Profile buttons */}
-              <div className="flex gap-2 mt-4">
+              <div className="flex flex-col lg:flex-row gap-2 mt-4">
                 {connectionStatuses[teacher._id] === "connected" ? (
                   <>
                     <button
-                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-2.5 px-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-sm font-medium"
                       onClick={() => navigate(`/chat/${teacher._id}`)}
                       disabled={actionLoading[teacher._id]}
                     >
                       {actionLoading[teacher._id] ? "Loading..." : "💬 Chat"}
                     </button>
                     <button
-                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2 rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 px-3 rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-sm font-medium"
                       onClick={() => handleDisconnect(teacher._id)}
                       disabled={actionLoading[teacher._id]}
                     >
-                      {actionLoading[teacher._id] ? "Loading..." : "🚫 Disconnect"}
+                      {actionLoading[teacher._id]
+                        ? "Loading..."
+                        : "🚫 Disconnect"}
                     </button>
                   </>
                 ) : connectionStatuses[teacher._id] === "pending" ? (
                   <button
-                    className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 rounded-lg cursor-not-allowed shadow-md"
+                    className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2.5 px-3 rounded-lg cursor-not-allowed shadow-md text-sm font-medium"
                     disabled
                   >
                     ⏳ Pending
                   </button>
                 ) : (
                   <button
-                    className="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                    className="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2.5 px-3 rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-sm font-medium"
                     onClick={() => handleConnect(teacher._id)}
                     disabled={actionLoading[teacher._id]}
                   >
@@ -366,12 +379,30 @@ function Explore() {
 
                 <button
                   onClick={() =>
-                    navigate(`/teacher/${teacher._id}`, { state: teacher })
+                    navigate(`/teacher/${teacher._id}`, {
+                      state: {
+                        teacher,
+                        connectionStatus: connectionStatuses[teacher._id],
+                      },
+                    })
                   }
-                  className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-2 rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                  className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-2.5 px-3 rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-sm font-medium"
                 >
                   👤 View Profile
                 </button>
+
+                {/* Report Button */}
+                {user && user.id !== teacher._id && (
+                  <button
+                    onClick={() => {
+                      setSelectedTeacher(teacher);
+                      setShowReportModal(true);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2.5 px-3 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-sm font-medium"
+                  >
+                    🚨 Report
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -381,6 +412,21 @@ function Explore() {
           </p>
         )}
       </div>
+
+      {/* Report Modal */}
+      <ReportUserModal
+        isOpen={showReportModal}
+        onClose={() => {
+          setShowReportModal(false);
+          setSelectedTeacher(null);
+        }}
+        reportedUser={selectedTeacher}
+        onSuccess={() => {
+          setShowReportModal(false);
+          setSelectedTeacher(null);
+          alert("Report submitted successfully! Admin will review it.");
+        }}
+      />
     </div>
   );
 }
