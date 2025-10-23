@@ -27,7 +27,7 @@ const app = express();
 
 // Middleware
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? ["https://learn-share-frontend.vercel.app"] // Replace with your actual Vercel domain
+  ? ["https://learn-share-one.vercel.app"] // Your Vercel domain
   : [
       "http://localhost:5173",
       "http://localhost:5174",

@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 const token = localStorage.getItem("token");
 
 const socketUrl = process.env.NODE_ENV === 'production'
-  ? "https://your-render-backend-url.onrender.com" // Replace with your actual Render backend URL
+  ? "https://learn-share-backend.onrender.com" // Your Render backend URL
   : "http://localhost:5001";
 
 const socket = io(socketUrl, {
