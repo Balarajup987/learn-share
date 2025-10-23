@@ -1,6 +1,8 @@
 import axios from "axios";
 
-export const API_BASE = "http://localhost:5001/api"; // ✅ must include /api
+export const API_BASE = process.env.NODE_ENV === 'production'
+  ? "https://your-render-backend-url.onrender.com/api" // Replace with your actual Render backend URL
+  : "http://localhost:5001/api"; // ✅ must include /api
 
 // Create axios instance with base URL and auth interceptor
 export const api = axios.create({

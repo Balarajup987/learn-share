@@ -26,13 +26,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(
-  cors({
-    origin: [
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? ["https://learn-share-frontend.vercel.app"] // Replace with your actual Vercel domain
+  : [
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:5175",
-    ],
+    ];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -41,9 +45,11 @@ app.use(
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/learnshare";
+
 // MongoDB
 mongoose
-  .connect("mongodb://127.0.0.1:27017/learnshare", {
+  .connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -95,11 +101,7 @@ app.get("/", (req, res) => res.send("Server running"));
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

@@ -2,7 +2,11 @@ import { io } from "socket.io-client";
 
 const token = localStorage.getItem("token");
 
-const socket = io("http://localhost:5001", {
+const socketUrl = process.env.NODE_ENV === 'production'
+  ? "https://your-render-backend-url.onrender.com" // Replace with your actual Render backend URL
+  : "http://localhost:5001";
+
+const socket = io(socketUrl, {
   auth: {
     token, // send token with handshake
   },
