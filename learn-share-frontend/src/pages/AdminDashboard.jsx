@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../api";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -33,11 +34,9 @@ const AdminDashboard = () => {
   const fetchComplaints = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5001/api/complaints/all");
-      const data = await response.json();
-
-      if (data.success) {
-        setComplaints(data.complaints);
+      const response = await api.get("/complaints/all");
+      if (response.data.success) {
+        setComplaints(response.data.complaints);
       }
     } catch (error) {
       console.error("Error fetching complaints:", error);
@@ -54,29 +53,18 @@ const AdminDashboard = () => {
   const handleComplaintAction = async (complaintId, action, adminNotes) => {
     try {
       setActionLoading(true);
-      const response = await fetch(
-        `http://localhost:5001/api/complaints/${complaintId}/action`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action,
-            adminNotes,
-            adminId: user.id,
-          }),
-        }
-      );
+      const response = await api.put(`/complaints/${complaintId}/action`, {
+        action,
+        adminNotes,
+        adminId: user.id,
+      });
 
-      const data = await response.json();
-
-      if (data.success) {
-        alert(data.message);
+      if (response.data.success) {
+        alert(response.data.message);
         fetchComplaints(); // Refresh complaints
         setSelectedComplaint(null);
       } else {
-        alert(data.message || "Error taking action");
+        alert(response.data.message || "Error taking action");
       }
     } catch (error) {
       console.error("Error taking action:", error);

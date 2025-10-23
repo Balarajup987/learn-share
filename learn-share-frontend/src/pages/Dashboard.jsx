@@ -222,18 +222,22 @@ const Dashboard = () => {
                       <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                       Active Member
                     </div>
-                    <select
-                      value={user?.role || "student"}
-                      onChange={(e) => handleRoleSwitch(e.target.value)}
-                      disabled={roleSwitching}
-                      className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                      <option value="both">Both</option>
-                    </select>
+                    {user?.role !== "admin" && (
+                      <select
+                        value={user?.role || "student"}
+                        onChange={(e) => handleRoleSwitch(e.target.value)}
+                        disabled={roleSwitching}
+                        className="text-sm border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="both">Both</option>
+                      </select>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-500 capitalize">Current Role: {user?.role || "student"}</p>
+                  <p className="text-sm text-gray-500 capitalize">
+                    Current Role: {user?.role === "admin" ? "Administrator" : (user?.role || "student")}
+                  </p>
                 </div>
                 <div className="mt-6 space-y-3">
                   <div className="flex justify-between items-center">
@@ -307,45 +311,84 @@ const Dashboard = () => {
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Link
-                    to="/explore"
-                    className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">🔍</div>
-                      <h3 className="font-semibold text-sm">Explore</h3>
-                    </div>
-                  </Link>
+                  {user?.role !== "admin" && (
+                    <>
+                      <Link
+                        to="/explore"
+                        className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">🔍</div>
+                          <h3 className="font-semibold text-sm">Explore</h3>
+                        </div>
+                      </Link>
 
-                  <Link
-                    to="/my-courses"
-                    className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105"
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">📚</div>
-                      <h3 className="font-semibold text-sm">My Courses</h3>
-                    </div>
-                  </Link>
+                      <Link
+                        to="/my-courses"
+                        className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105"
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">📚</div>
+                          <h3 className="font-semibold text-sm">My Courses</h3>
+                        </div>
+                      </Link>
 
-                  <Link
-                    to="/connections"
-                    className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105"
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">👥</div>
-                      <h3 className="font-semibold text-sm">Connections</h3>
-                    </div>
-                  </Link>
+                      <Link
+                        to="/connections"
+                        className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105"
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">👥</div>
+                          <h3 className="font-semibold text-sm">Connections</h3>
+                        </div>
+                      </Link>
 
-                  <Link
-                    to="/requests"
-                    className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all transform hover:scale-105"
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">📬</div>
-                      <h3 className="font-semibold text-sm">Requests</h3>
-                    </div>
-                  </Link>
+                      <Link
+                        to="/requests"
+                        className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all transform hover:scale-105"
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">📬</div>
+                          <h3 className="font-semibold text-sm">Requests</h3>
+                        </div>
+                      </Link>
+                    </>
+                  )}
+
+                  {user?.role === "admin" && (
+                    <>
+                      <Link
+                        to="/admin"
+                        className="group bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl hover:from-red-600 hover:to-red-700 transition-all transform hover:scale-105"
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">🛡️</div>
+                          <h3 className="font-semibold text-sm">Admin Panel</h3>
+                        </div>
+                      </Link>
+
+                      <div className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 cursor-pointer">
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">📊</div>
+                          <h3 className="font-semibold text-sm">Analytics</h3>
+                        </div>
+                      </div>
+
+                      <div className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 cursor-pointer">
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">⚙️</div>
+                          <h3 className="font-semibold text-sm">Settings</h3>
+                        </div>
+                      </div>
+
+                      <div className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105 cursor-pointer">
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">📋</div>
+                          <h3 className="font-semibold text-sm">Reports</h3>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -353,7 +396,7 @@ const Dashboard = () => {
         </div>
 
         {/* Teacher Profile Section */}
-        {teacherProfile && (
+        {teacherProfile && user?.role !== "admin" && (
           <div className="mt-8">
             <div className="bg-white rounded-xl shadow-lg">
               <div className="bg-gradient-to-r from-green-600 to-teal-600 px-6 py-4">

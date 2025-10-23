@@ -164,6 +164,20 @@ router.post("/submit", async (req, res) => {
       });
     }
 
+    // Check if users are connected (only connected users can report each other)
+    // Skip this check for admin users
+    if (complainant.role !== "admin") {
+      const isConnected = complainant.connections.includes(reportedUserId) ||
+                         reportedUser.connections.includes(complainantId);
+
+      if (!isConnected) {
+        return res.status(400).json({
+          message: "You can only report users you are connected with",
+          success: false,
+        });
+      }
+    }
+
     // Create the complaint
     const complaint = new Complaint({
       complainant: complainantId,
@@ -172,6 +186,7 @@ router.post("/submit", async (req, res) => {
       description,
       category,
       complainantEmail,
+      reportedUserEmail: reportedUser.email,
       evidence,
       priority:
         category === "harassment" || category === "scam" ? "high" : "medium",

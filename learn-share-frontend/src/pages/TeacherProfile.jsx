@@ -212,8 +212,8 @@ export default function TeacherProfile() {
           </button>
         )}
 
-        {/* Report Button */}
-        {user && user.id !== teacher._id && (
+        {/* Report Button - Only show when connected */}
+        {user && user.id !== teacher._id && connectionStatus === "connected" && (
           <button
             className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
             onClick={() => setShowReportModal(true)}

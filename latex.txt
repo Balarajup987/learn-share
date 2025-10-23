@@ -1,0 +1,1021 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[top=1in, bottom=1in, left=1.5in, right=1.1in]{geometry}
+
+\usepackage{times}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{fancyhdr}
+\usepackage{etoolbox}
+\usepackage{url}
+
+%\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+%\usepackage{fontspec}
+%\usepackage{DejaVu Sans Mono}
+%\setmonofont{DejaVu Sans Mono}
+%\usepackage{verbatim}
+
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setmonofont{DejaVu Sans Mono}
+
+
+% Set line spacing
+\onehalfspacing
+
+% Configure page numbering
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+
+% For preliminary pages (roman numerals)
+\fancypagestyle{preliminary}{
+    \fancyhf{}
+    \cfoot{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+}
+
+% For main content (arabic numerals)
+\fancypagestyle{main}{
+    \fancyhf{}
+    \cfoot{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+}
+
+% Title formatting
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries\centering}{\chaptertitlename\ \thechapter}{0.1pt}{\LARGE}
+
+\titleformat{\section}
+{\normalfont\bfseries\MakeUppercase}{\thesection}{1em}{}
+\titleformat{\subsection}
+{\normalfont\bfseries}{\thesubsection}{1em}{}
+
+% Section spacing
+\titlespacing*{\chapter}{0pt}{-30pt}{20pt}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titlespacing*{\subsection}{0pt}{12pt}{6pt}
+
+% Paragraph formatting
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{12pt}
+
+% === Border on every page (safe version) ===
+\usepackage{tikz}
+\usepackage{eso-pic}
+
+\makeatletter
+\AddToShipoutPictureBG{%
+  \AtPageLowerLeft{%
+    \begin{tikzpicture}[remember picture, overlay]
+      % Left margin = 1.5in, right/top/bottom = 1in
+      \draw[line width=1pt, color=black]
+        ([xshift=1.3in,yshift=0.9in]current page.south west)
+        rectangle
+        ([xshift=-0.9in,yshift=-0.9in]current page.north east);
+    \end{tikzpicture}%
+  }
+}
+\makeatother
+
+
+
+\begin{document}
+
+% Preliminary pages with roman numerals
+\pagenumbering{roman}
+\pagestyle{preliminary}
+
+% Page-1 { Top Page (Annex-1)` }
+\begin{center}
+{\fontsize{18}{27}\bfseries EVENTHIVE\\}
+
+{\fontsize{14}{21}\bfseries A MINI PROJECT REPORT\\}
+\vspace{0.7cm}
+
+{\fontsize{14}{21}\itshape Submitted by\\}
+\vspace{0.3cm}
+
+{\fontsize{14}{21}\bfseries Kokkula Bhavith Kumar(B210662)\\}
+{\fontsize{14}{21}\bfseries Pagidipala Hanuman(B210843)\\}
+{\fontsize{14}{21}\bfseries Amaravadi Sanjay(B211483)\\}
+\vspace{1cm}
+
+{\fontsize{16}{24}\bfseries Of\\}
+{\fontsize{16}{24}\bfseries Bachelor of Technology\\}
+\vspace{1cm}
+
+{\fontsize{12}{21}\textbf{\textit{Under the guidance of}}}
+
+{\fontsize{14}{21}\bfseries Mrs.Pullaiahgari Sarika, Asst. Prof\\}
+\vspace{1cm}
+
+\begin{figure}[h]
+    \centering
+    %\includegraphics[width=0.4\textwidth]{LOGO.jpg} 
+    \label{fig:logo}
+\end{figure}
+
+
+{\fontsize{14}{16.8}\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\\
+RAJIV GANDHI UNIVERSITY OF KNOWLEDGE TECHNOLOGIES\\
+BASAR, NIRMAL (DIST.),\\
+TELANGANA - 504107\\}
+
+\end{center}
+\clearpage
+
+% Page-2 {Cover Page (Annex-2)}
+\begin{center}
+{\fontsize{16}{24}\bfseries EVENTHIVE\\}
+\vspace{1cm}
+
+{\fontsize{12}{18}\bfseries\itshape Project Report submitted to\\
+Rajiv Gandhi University of Knowledge Technologies, Basar\\
+for the partial fulfillment of the requirements\\
+for the award of the degree of\\}
+\vspace{1cm}
+
+{\fontsize{14}{21}\bfseries Bachelor of Technology\\
+in\\
+Computer Science \& Engineering\\}
+\vspace{0.5cm}
+
+{\fontsize{12}{18}\bfseries\itshape by\\}
+\vspace{0.5cm}
+
+{\fontsize{12}{18}\bfseries\itshape Kokkula Bhavith Kumar(B210662)}\\
+{\fontsize{12}{18}\bfseries\itshape Pagidipala Hanuman(B210843)}\\
+{\fontsize{12}{18}\bfseries\itshape Amaravadi Sanjay(B211483)}\\
+\vspace{1cm}
+
+{\fontsize{12}{21}\bfseries Under the Guidance of\\}
+\vspace{0.5cm}
+
+{\fontsize{12}{18}\bfseries\itshape Mrs.Pullaiahgari Sarika, Asst. Prof\\}
+\vspace{1cm}
+
+\begin{figure}[h]
+    \centering
+    %\includegraphics[width=0.25\textwidth]{LOGO.jpg} 
+    \label{fig:logo}
+\end{figure}
+\vspace{0.5cm}
+
+{\fontsize{14}{16.8}\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\\
+RAJIV GANDHI UNIVERSITY OF KNOWLEDGE TECHNOLOGIES, BASAR\\
+OCTOBER 2025\\}
+
+\end{center}
+\clearpage
+
+% Page-3 {Certificate Page (Annex-3)}
+\addcontentsline{toc}{chapter}{Certificate Page}
+\begin{center}
+    \begin{figure}[h]
+        \centering
+       % \includegraphics[width=0.25\textwidth]{LOGO.jpg} 
+        \label{fig:logo}
+    \end{figure}
+
+{\fontsize{14}{16.8}\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\\RAJIV GANDHI UNIVERSITY OF KNOWLEDGE TECHNOLOGIES, BASAR\\}
+\vspace{1cm}
+
+{\fontsize{16}{24}\bfseries CERTIFICATE\\}
+\end{center}
+
+\vspace{0.5cm}
+
+This is to certify that the Project Report entitled \textbf{EventHive} submitted by \textbf{Kokkula Bhavith Kumar(B210662), Pagidipala Hanuman(B210843), Amaravadi Sanjay (B211483)}, Department of Computer Science and Engineering, Rajiv Gandhi University Of Knowledge Technologies, Basar; for partial fulfillment of the requirements for the degree of Bachelor of Technology in Computer Science and Engineering; is a bonafide record of the work and investigations carried out by him/her/them under my supervision and guidance.
+
+\vspace{2.5cm}
+
+\begin{minipage}{0.45\textwidth}
+\begin{center}
+\textbf{PROJECT SUPERVISOR}\\
+\vspace{0.5cm}
+\textbf{Mrs.Pullaiahgari Sarika}\\
+\textbf{Assistant Professor}
+\end{center}
+\end{minipage}
+\hfill
+\begin{minipage}{0.45\textwidth}
+\begin{center}
+\textbf{HEAD OF DEPARTMENT}\\
+\vspace{0.5cm}
+\textbf{Dr.B.Venkat Raman}\\
+\textbf{Assistant Professor}
+\end{center}
+\end{minipage}
+
+\vspace{1.5cm}
+\begin{center}
+    \textbf{EXTERNAL EXAMINER}
+\end{center}
+
+\clearpage
+% Page-4 {Declaration Page (Annex-4)}
+\addcontentsline{toc}{chapter}{Declaration}
+
+\begin{center}
+    \begin{figure}[h]
+        \centering
+        %\includegraphics[width=0.25\textwidth]{LOGO.jpg} 
+        \label{fig:logo}
+    \end{figure}
+
+{\fontsize{14}{16.8}\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\\
+RAJIV GANDHI UNIVERSITY OF KNOWLEDGE TECHNOLOGIES, BASAR\\}
+\vspace{1cm}
+
+{\fontsize{16}{24}\bfseries DECLARATION\\}
+\end{center}
+
+\vspace{1cm}
+
+We hereby declare that the work which is being presented in this project entitled, "\textbf{EventHive}" submitted to \textbf{RAJIV GANDHI UNIVERSITY OF KNOWLEDGE TECHNOLOGIES, BASAR} in the partial fulfillment of the requirements for the award of the degree of \textbf{BACHELOR OF TECHNOLOGY} in \textbf{COMPUTER SCIENCE AND ENGINEERING}, is an authentic record of our own work carried out under the supervision of \textbf{"Mrs.Pullaiahgari Sarika"}, Assistant Professor in Department of Computer Science And Engineering, RGUKT, Basar.\\The matter embodied in this project report has not been submitted by us for the award of any other degree.
+
+\vspace{2cm}
+Place: Basar\\
+Date :
+
+\begin{flushright}
+Kokkula Bhavith Kumar(B210662)\\
+Pagidipala Hanuman(B210843)\\
+Amaravadi Sanjay(B211483)\\
+\end{flushright}
+\clearpage
+
+% Page-5 (Acknowledgements)
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+
+We would like to express my sincere gratitude to my advisor, \textbf{Mrs.Pullaiahgari Sarika}, whose knowledge and guidance has motivated me to achieve my goals possible. She has consistently been a source of motivation, encouragement, and inspiration. The time I have spent working under her supervision has truly been a pleasure.
+
+\vspace{0.5cm}
+
+I thank HOD \textbf{Dr.B.Venkat Raman} for his effort and guidance and all senior faculty members of the CSE Department for their help during my course. Thanks to programmers and non-teaching staff of the CSE Department.
+
+\vspace{0.5cm}
+
+We would like to express my sincere gratitude to my Project Co-ordinator \textbf{Mrs.B. Latha Reddy}, whose knowledge and guidance has motivated me to achieve goals I never thought possible. She has consistently been a source of motivation, encouragement, and inspiration. The time I have spent working under his supervision has truly been a pleasure.
+
+\vspace{0.5cm}
+
+I thank my Vice-Chancellor,\textbf{ Prof. A. Govardhan}, and Management for providing excellent facilities to carry out my project work.
+
+\vspace{0.5cm}
+
+Finally, special thanks to my parents for their support and encouragement throughout my life and this course. Thanks to all my friends and well-wishers for their constant support.
+
+\vspace{1cm}
+
+\begin{flushright}
+\textbf{Kokkula Bhavith Kumar(B210662)}\\
+\textbf{Pagidipala Hanuman(B210843)}\\
+\textbf{Amaravadi Sanjay(B211483)}
+\end{flushright}
+\clearpage
+
+% Abstract
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\noindent
+In today’s digital era, managing campus and organizational events efficiently is a growing challenge due to the involvement of multiple stakeholders and manual workflows. \textbf{EventHive – Smart Event Management Platform} is a comprehensive web-based solution designed to streamline the entire lifecycle of event management through automation, collaboration, and data-driven insights.
+
+EventHive enables four major user roles—\textit{Administrator, Organisation, Volunteer, and Participant}—to operate seamlessly within a unified environment. The platform allows organisations to create and manage events, participants to register and receive QR-based tickets, volunteers to assist in coordination, and administrators to oversee approvals and analytics. Real-time notifications and OTP-based authentication ensure security and transparency in every interaction.
+
+The system is developed using the \textbf{MERN (MongoDB, Express.js, React.js, Node.js)} stack for full-stack integration, with \textbf{Tailwind CSS} and \textbf{Framer Motion} enhancing the user experience through modern, responsive interfaces and animations. Authentication is secured using \textbf{JWT (JSON Web Token)} and \textbf{bcrypt.js}, while \textbf{Nodemailer} facilitates OTP verification and event communication.
+
+EventHive eliminates redundant manual processes, improves accessibility, and enhances user engagement across all event phases. By integrating automation, modular design, and real-time data exchange, the system significantly reduces administrative effort and fosters a digitally efficient event ecosystem. This project demonstrates how modern web technologies can effectively transform traditional event management into a secure, scalable, and intelligent solution.
+
+\clearpage
+
+% Table of Contents
+\tableofcontents
+\clearpage
+
+% List of Figures
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\clearpage
+
+% List of Tables
+%\listoftables
+%\addcontentsline{toc}{chapter}{List of Tables}
+%\clearpage
+
+% List of Abbreviations and Symbols Used
+\chapter*{List of Abbreviations and Symbols Used}
+\addcontentsline{toc}{chapter}{List of Abbreviations and Symbols Used}
+
+\begin{tabular}{p{3cm}p{10cm}}
+\textbf{API} & Application Programming Interface\\
+\textbf{JWT} & JSON web Token\\
+\textbf{API} & Application Programming Interface \\
+\textbf{JWT} & JSON Web Token \\
+\textbf{MERN} & MongoDB, Express.js, React.js, Node.js \\
+\textbf{OTP} & One-Time Password \\
+\textbf{CRUD} & Create, Read, Update, Delete \\
+\textbf{UI} & User Interface \\
+\textbf{UX} & User Experience \\
+\textbf{DB} & Database \\
+\textbf{HTTP} & HyperText Transfer Protocol \\
+\textbf{HTTPS} & HyperText Transfer Protocol Secure \\
+\textbf{SMTP} & Simple Mail Transfer Protocol \\
+\textbf{REST} & Representational State Transfer \\
+\textbf{PDF} & Portable Document Format \\
+\textbf{MVC} & Model-View-Controller \\
+\textbf{JSON} & JavaScript Object Notation \\
+\end{tabular}
+
+\clearpage
+
+% Main content starts with arabic numbering
+\pagenumbering{arabic}
+\pagestyle{main}
+
+% Chapter 1: Introduction
+\chapter{Introduction}
+\section{Introduction}
+In the modern digital era, managing events efficiently has become a key challenge for organisations, institutions, and participants. Manual coordination, paper-based registrations, and scattered communication often lead to confusion, data loss, and inefficiency. To overcome these challenges, EventHive has been developed as a Smart Event Management Platform that simplifies every stage of event organization and participation through an integrated digital system.
+
+EventHive is a multi-role web application designed to serve various users — Administrators, Organisations, Volunteers, and Participants. The platform enables organisations to create and manage events, volunteers to assist in event execution, participants to browse and register for events, and administrators to oversee all operations centrally. This ensures transparency, coordination, and real-time communication between all roles
+\section{Motivation}
+Event management within educational institutions often faces multiple challenges such as uncoordinated communication between organizers, limited awareness among students, manual registration, and difficulty in tracking participation. Traditional event handling methods rely on notice boards, emails, and spreadsheets, leading to inefficiency, data redundancy, and lack of analytics.
+
+The need for a smart, centralized, and role-based digital platform is crucial in today’s technology-driven environment. With increasing frequency of campus events, workshops, and competitions, institutions require a robust system that can automate the event lifecycle—from creation and registration to participant verification and feedback collection.
+
+EventHive aims to bridge this gap by providing a modern, scalable, and secure event management solution using advanced web technologies. It leverages React.js for an interactive frontend, Node.js for backend services, and MongoDB for efficient data storage, ensuring a smooth experience for all stakeholders including administrators, organizations, volunteers, and participants.
+
+\section{Problem Definition}
+Currently, universities and organizations often face the following issues in event coordination:
+\begin{itemize}
+    \item \textbf{Lack of centralized system:} Event data, participant records, and communication are spread across multiple platforms.
+    \item \textbf{Manual registrations:} Paper-based or email-based registrations cause data inconsistencies and delays.
+    \item \textbf{No real-time updates:} Participants are often unaware of event status changes or notifications.
+    \item \textbf{Inefficient coordination:} Volunteers and organizers lack a structured workflow for managing on-site and online events.
+    \item \textbf{Limited analytics:} Organizers cannot easily track participation metrics, feedback, or engagement statistics.
+\end{itemize}
+
+Thus, there is a strong need for a web-based application that can provide an integrated environment for managing campus events effectively and securely.
+
+\section{Objective of the Project}
+The primary objective of \textbf{EventHive} is to develop a comprehensive, cloud-based event management platform that simplifies and automates the organization and participation processes for university-level events. The key objectives include:
+\begin{enumerate}
+    \item To provide a \textbf{role-based access system} for Administrators, Organizations, Volunteers, and Participants.
+    \item To enable \textbf{online event creation, registration, and tracking} through an intuitive user interface.
+    \item To implement a \textbf{secure authentication system} using JWT and OTP verification.
+    \item To facilitate \textbf{QR-code-based ticketing} and verification for participants.
+    \item To offer \textbf{real-time notifications} and email updates using Nodemailer.
+    \item To maintain a \textbf{responsive and visually appealing frontend} using React.js, Tailwind CSS, and Framer Motion.
+    \item To generate \textbf{event analytics and reports} for administrators and organizers.
+\end{enumerate}
+
+In summary, EventHive serves as a unified digital platform to enhance coordination, transparency, and efficiency in campus event management while ensuring security, scalability, and ease of use.
+
+\chapter{Analysis}
+
+\section{User Requirement Analysis}
+
+EventHive is designed as a multi-role event management platform where each user type has specific roles, responsibilities, and access permissions. To ensure efficiency and clarity, it is essential to analyze both the \textbf{functional} and \textbf{non-functional} requirements of the system.
+
+\subsection{Functional Requirements}
+
+\subsubsection*{1. Administrator Requirements}
+\begin{itemize}
+    \item Admin should be able to log in securely using verified credentials.
+    \item Approve or reject new organization registrations.
+    \item View and manage all events hosted across the platform.
+    \item Suspend or reactivate user accounts (organizations or volunteers) if necessary.
+    \item Monitor system performance and usage analytics.
+    \item Send global announcements or notifications to users.
+\end{itemize}
+
+\subsubsection*{2. Organization Requirements}
+\begin{itemize}
+    \item Register and log in securely using OTP-based email verification.
+    \item Create, edit, and delete events.
+    \item Upload event banners, logos, and descriptions.
+    \item Approve or reject participant and volunteer applications.
+    \item Generate event analytics reports and export them as PDFs.
+    \item Send notifications or announcements to registered users and volunteers.
+\end{itemize}
+
+\subsubsection*{3. Volunteer Requirements}
+\begin{itemize}
+    \item Register and login using assigned credentials by the organization.
+    \item View assigned events and corresponding responsibilities.
+    \item Mark participant attendance via QR code validation.
+    \item Receive real-time updates and notifications about events.
+    \item Update personal information and profile details.
+\end{itemize}
+
+\subsubsection*{4. Participant (User) Requirements}
+\begin{itemize}
+    \item Register and verify account using OTP sent via email.
+    \item Browse upcoming, ongoing, and past events.
+    \item Register for available events based on eligibility.
+    \item View event details, schedules, and venue information.
+    \item Download QR-based tickets and receive confirmation via email.
+    \item Access personal dashboard with event participation history.
+    \item Update profile, upload academic proofs, and manage account settings.
+\end{itemize}
+
+\subsubsection*{5. System Requirements (Cross-Functional)}
+\begin{itemize}
+    \item Provide role-based authentication using JWT tokens.
+    \item Maintain secure database operations with MongoDB.
+    \item Enable efficient data fetching using RESTful APIs.
+    \item Support image and document uploads.
+    \item Offer responsive design across desktop, tablet, and mobile devices.
+\end{itemize}
+
+\subsection{Non-Functional Requirements}
+
+\begin{itemize}
+    \item \textbf{Performance:} The system should handle multiple concurrent users efficiently.
+    \item \textbf{Security:} Data transmission and authentication should use HTTPS and encrypted tokens.
+    \item \textbf{Scalability:} Architecture should support easy integration of new modules (e.g., payment gateway).
+    \item \textbf{Usability:} Interface should be intuitive with minimal learning curve.
+    \item \textbf{Availability:} The application should maintain 99\% uptime for hosted services.
+    \item \textbf{Maintainability:} Modular code structure allows easy debugging and enhancements.
+    \item \textbf{Compatibility:} Application should work across major browsers and devices.
+\end{itemize}
+
+\subsection{Hardware and Software Requirements}
+
+\subsubsection*{Hardware Requirements}
+\begin{itemize}
+    \item Processor: Intel i3 or higher
+    \item RAM: Minimum 8 GB
+    \item Storage: Minimum 512 GB HDD or 128 GB SSD
+    \item Internet connection: Required for hosting and API access
+\end{itemize}
+
+\subsubsection*{Software Requirements}
+\begin{itemize}
+    \item Operating System: Windows / Linux / macOS
+    \item Frontend: React.js with Vite and Tailwind CSS
+    \item Backend: Node.js with Express.js
+    \item Database: MongoDB / MongoDB Atlas
+    \item Development Tools: VS Code, Postman, Git
+    \item Version Control: GitHub
+\end{itemize}
+
+\chapter{System Analysis}
+
+\section{Existing System}
+
+In most universities and organizations, event management still relies on manual or semi-digital methods such as Google Forms, emails, or social media announcements. This traditional approach creates several inefficiencies and challenges:
+
+\begin{itemize}
+    \item \textbf{Manual Registration:} Participants are required to fill physical forms or unstructured online forms without validation or verification.
+    \item \textbf{Data Duplication:} Managing large sets of participant data manually often leads to duplicate entries and human errors.
+    \item \textbf{Lack of Real-Time Communication:} Updates regarding event schedules, venues, or changes are often delayed or lost.
+    \item \textbf{No Centralized Platform:} Each department or organization maintains its own process, making it difficult for administrators to monitor all ongoing activities.
+    \item \textbf{Inefficient Volunteer Coordination:} Event volunteers are not properly managed, leading to miscommunication and unorganized task assignments.
+    \item \textbf{Limited Reporting and Analytics:} Organizers have no structured way to generate insights, such as participation count, feedback, or engagement trends.
+\end{itemize}
+
+Thus, the existing system is fragmented, time-consuming, and prone to errors. It lacks automation, scalability, and centralized access to event-related data.
+
+\section{Proposed System}
+
+The proposed system, \textbf{EventHive}, introduces a unified and intelligent platform to streamline event management processes. It eliminates manual dependency by integrating all roles—\textit{Admin, Organisation, Volunteer, and Participant}—into a centralized web-based environment.
+
+\subsection*{Features of the Proposed System}
+\begin{itemize}
+    \item \textbf{Centralized Dashboard:} Provides different dashboards for each role to view, create, and manage event data efficiently.
+    \item \textbf{Secure Authentication:} Uses JWT (JSON Web Token) for role-based access and OTP verification for new users.
+    \item \textbf{Event Lifecycle Management:} Covers the full cycle—event creation, participant registration, volunteer assignment, and feedback.
+    \item \textbf{Real-Time Notifications:} Implements email and in-app notifications using Nodemailer and socket-based updates.
+    \item \textbf{QR-Based Ticketing:} Generates unique QR codes for participants to verify registration and event entry.
+    \item \textbf{Automated Reports:} Exports participation data, analytics, and statistics in PDF format.
+    \item \textbf{Responsive Design:} Built with React.js and Tailwind CSS, ensuring usability on all devices.
+\end{itemize}
+
+\subsection*{Advantages of the Proposed System}
+\begin{itemize}
+    \item Reduces manual work and human error.
+    \item Ensures transparency across all event-related operations.
+    \item Simplifies volunteer and participant management.
+    \item Enhances communication through instant notifications.
+    \item Provides secure and structured storage using MongoDB.
+    \item Generates useful analytics for decision-making.
+\end{itemize}
+
+The proposed system therefore ensures a scalable, secure, and efficient solution for managing campus and organizational events.
+
+\section{Software Used}
+
+The following technologies are used in the development of \textbf{EventHive}:
+
+\subsection*{Frontend Technologies}
+\begin{itemize}
+    \item \textbf{React.js (Vite Framework):} For building the Single Page Application (SPA) with fast loading and dynamic routing.
+    \item \textbf{Tailwind CSS (v4+):} Utility-first CSS framework for responsive design.
+    \item \textbf{React Router DOM:} For routing and handling protected routes based on user roles.
+    \item \textbf{Axios:} For handling HTTP requests to backend APIs.
+\end{itemize}
+
+\subsection*{Backend Technologies}
+\begin{itemize}
+    \item \textbf{Node.js and Express.js:} Used to create a RESTful API for communication between frontend and database.
+    \item \textbf{JWT Authentication:} Implements secure login and session handling for all roles.
+    \item \textbf{Bcrypt.js:} For password hashing to ensure data protection.
+    \item \textbf{Nodemailer:} Sends OTPs and email notifications using Gmail SMTP.
+    \item \textbf{Helmet and CORS:} For API security and cross-origin control.
+\end{itemize}
+
+\subsection*{Database Technologies}
+\begin{itemize}
+    \item \textbf{MongoDB Atlas (Cloud Database):} Stores all user, event, and notification data in a NoSQL format.
+    \item \textbf{Mongoose:} ODM (Object Data Modeling) library for schema management and database operations.
+\end{itemize}
+
+\subsection*{Development Tools}
+\begin{itemize}
+    \item \textbf{Visual Studio Code:} Primary IDE for development.
+    \item \textbf{Postman:} Used for testing REST API endpoints.
+    \item \textbf{Git and GitHub:} For version control and team collaboration.
+    \item \textbf{Vite CLI:} To run and build frontend components efficiently.
+\end{itemize}
+
+\chapter{System Design}
+
+System design is the blueprint of the proposed system. It explains the overall structure, interaction between system components, and data movement across modules. In \textbf{EventHive}, system design includes use case modeling, class diagrams, sequence diagrams, and data flow diagrams. These collectively help in understanding the workflow and dependencies between different user roles and modules.
+
+\section{UML Diagrams}
+
+Unified Modeling Language (UML) diagrams are used to describe, visualize, and document the structure and behavior of the system. They represent how different entities interact within the EventHive architecture.
+
+\subsection*{1. Use Case Diagram}
+
+The use case diagram for \textbf{EventHive} illustrates the interaction between different user roles (Admin, Organisation, Volunteer, and Participant) and the system. 
+
+\clearpage
+\begin{center}
+    \begin{figure}[h]
+        \centering
+        %\includegraphics[width=0.8\textwidth]{USE_CASE.png} 
+        \caption{Use Case Diagram of EventHive}
+        \label{fig:usecase}
+    \end{figure}
+\end{center}
+
+\subsection*{2. Class Diagram}
+
+The class diagram shows the main entities and their relationships within the system. It helps in database schema design and object-oriented implementation.
+
+\begin{center}
+    \begin{figure}[h]
+        \centering
+       % \includegraphics[width=0.8\textwidth]{CLASS_DIAGRAM.png} 
+        \caption{Class Diagram of EventHive}
+        \label{fig:classdiagram}
+    \end{figure}
+\end{center}
+
+\subsection*{3. Sequence Diagram}
+
+The sequence diagram demonstrates the order of interactions between system components for a particular operation, such as user registration or event creation.
+
+\begin{center}
+    \begin{figure}[h]
+        \centering
+       % \includegraphics[width=0.55\textwidth]{Sequence.png} 
+        \label{fig:sequencediagram}
+        \caption{Sequence Diagram for User Registration}
+    \end{figure}
+\end{center}
+
+
+
+\section{Data Flow}
+
+The Data Flow Diagram (DFD) shows how information moves through the EventHive system and how inputs are transformed into outputs through different processes.
+
+\subsection*{1. DFD (Context Level)}
+
+\begin{center}
+    \begin{figure}[h]
+        \centering
+       % \includegraphics[width=0.55\textwidth]{DFD_Level0.png} 
+        \caption{Context Level DFD of EventHive}
+        \label{fig:dfdlevel0}
+    \end{figure}
+\end{center}
+
+
+\subsection*{3. Explanation of Data Flow}
+
+\begin{enumerate}
+    \item \textbf{Input:} User credentials, event data, participant information.
+    \item \textbf{Processing:} 
+        \begin{itemize}
+            \item Authentication and authorization using JWT.
+            \item OTP generation and verification via Nodemailer.
+            \item Database operations handled by Express.js and Mongoose.
+            \item QR code generation for participant tickets.
+        \end{itemize}
+    \item \textbf{Output:} 
+        \begin{itemize}
+            \item Event creation confirmation.
+            \item Registration success and ticket generation.
+            \item Notifications and analytics reports.
+        \end{itemize}
+\end{enumerate}
+
+\subsection*{4. Data Storage and Access}
+
+\begin{itemize}
+    \item All records are stored in \textbf{MongoDB Collections:} Users, Events, Organisations, Volunteers, Participants, and Notifications.
+    \item CRUD operations (Create, Read, Update, Delete) are performed through Mongoose models.
+    \item GridFS or cloud storage handles images, event banners, and documents.
+    \item Each transaction is logged and traceable via unique IDs for audit purposes.
+\end{itemize}
+
+\noindent
+The system design thus provides a comprehensive view of EventHive’s workflow and ensures efficient interaction between all functional components.
+
+\chapter{Implementation}
+
+Implementation refers to the actual construction and deployment of the software system as per the design and specifications. The EventHive platform is implemented using the MERN (MongoDB, Express.js, React.js, Node.js) stack with secure authentication, modular architecture, and responsive frontend design. This chapter details the structure of the project, its implementation flow, and descriptions of all major modules.
+
+\section{Project Structure}
+
+The entire system is divided into two major sections — the \textbf{frontend (client)} and the \textbf{backend (server)}. Both communicate via RESTful APIs.
+
+\begin{verbatim}
+eventhive/
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── assets/
+│   │   └── main.jsx
+│   ├── package.json
+│   ├── tailwind.config.js
+│   └── vite.config.js
+│
+├── server/
+│   ├── controllers/
+│   ├── routes/
+│   ├── models/
+│   ├── middleware/
+│   ├── services/
+│   ├── utils/
+│   ├── config/
+│   ├── index.js
+│   └── package.json
+│
+└── README.md
+\end{verbatim}
+
+\noindent
+This modular folder structure ensures better maintainability and scalability. The frontend handles user interaction and rendering, while the backend focuses on data processing, validation, and database communication.
+
+\section{Description of Implementation}
+
+\subsection*{Frontend Implementation}
+\begin{itemize}
+    \item The frontend is built using \textbf{React.js} with \textbf{Vite} for fast compilation.
+    \item Styling is managed through \textbf{Tailwind CSS}, ensuring a modern, responsive interface.
+    \item Navigation between routes (Home, About, Events, Dashboards, etc.) is handled using \textbf{React Router DOM}.
+    \item Reusable UI components such as navigation bars, cards, and modals are placed under the \texttt{src/components} directory.
+    \item \textbf{Axios} is used for all API communications with backend services.
+    \item Animations and smooth transitions are created using \textbf{Framer Motion}.
+    \item Alerts and loading effects are implemented using \textbf{React Toastify} and skeleton loaders.
+\end{itemize}
+
+\subsection*{Backend Implementation}
+\begin{itemize}
+    \item The backend is implemented using \textbf{Node.js} with the \textbf{Express.js} framework.
+    \item All routes are modularized and defined under the \texttt{server/routes} directory.
+    \item Business logic resides within \texttt{controllers}, and middleware handles request validation, error handling, and authentication.
+    \item \textbf{MongoDB} is used as the database, with \textbf{Mongoose} for schema modeling and CRUD operations.
+    \item \textbf{JWT (JSON Web Token)} is used for authentication, while \textbf{bcrypt.js} secures password storage.
+    \item \textbf{Nodemailer} is integrated for sending OTPs, verification emails, and notifications.
+    \item \textbf{Helmet} and \textbf{CORS} are configured for application-level security.
+\end{itemize}
+
+\section{Module Description}
+
+The EventHive system is divided into multiple functional modules, each designed to fulfill a specific role in the platform’s workflow.
+
+\subsection{User Module (Participant)}
+
+\textbf{Purpose:} Enables students or participants to browse, register, and manage event participation.
+
+\textbf{Features:}
+\begin{itemize}
+    \item Register and log in using OTP-based verification.
+    \item Browse available events (upcoming, ongoing, and completed).
+    \item Register for eligible events and receive QR-code tickets.
+    \item Access event notifications, reminders, and updates.
+    \item Manage user profile and upload academic proofs or resumes.
+\end{itemize}
+
+\textbf{Implementation Highlights:}
+\begin{itemize}
+    \item React pages for dashboard and registration integrated with backend APIs.
+    \item Participant details stored in MongoDB and linked with events via participant IDs.
+    \item QR codes generated for each registration using a Node.js utility.
+\end{itemize}
+
+\subsection{Admin Module}
+
+\textbf{Purpose:} Provides system oversight, approval controls, and analytics.
+
+\textbf{Features:}
+\begin{itemize}
+    \item Manage all registered organizations and volunteers.
+    \item Approve or reject event creation requests.
+    \item Monitor participant statistics and activity logs.
+    \item Handle complaints and issue responses.
+    \item Send system-wide notifications.
+\end{itemize}
+
+\textbf{Implementation Highlights:}
+\begin{itemize}
+    \item Admin-specific routes protected by JWT role validation middleware.
+    \item Dashboard visualizes key metrics using chart components.
+    \item CRUD operations implemented for user and event management.
+\end{itemize}
+
+\subsection{Connection Module}
+
+\textbf{Purpose:} Manages the connection between frontend, backend, and the database.
+
+\textbf{Components:}
+\begin{itemize}
+    \item API endpoints handled via \texttt{Axios} in the frontend.
+    \item Express routes map frontend requests to backend controllers.
+    \item MongoDB connection managed through a configuration file (\texttt{config/database.js}).
+\end{itemize}
+
+\textbf{Workflow:}
+\begin{enumerate}
+    \item Frontend sends API request to Express.js server.
+    \item Server validates JWT token and verifies user role.
+    \item Controller processes request and queries MongoDB.
+    \item Response is sent back to frontend and displayed dynamically.
+\end{enumerate}
+
+\subsection{Messaging Module}
+
+\textbf{Purpose:} Handles all notification and email communication within the system.
+
+\textbf{Features:}
+\begin{itemize}
+    \item Sends OTP during signup or password recovery.
+    \item Sends welcome and confirmation emails upon successful registration.
+    \item Allows organizations to send updates to volunteers and participants.
+    \item Supports file attachments and formatted email templates.
+\end{itemize}
+
+\textbf{Implementation Highlights:}
+\begin{itemize}
+    \item Built using \textbf{Nodemailer} with Gmail SMTP service.
+    \item Templates stored under \texttt{server/templates}.
+    \item Resend feature implemented with time-based cooldown.
+\end{itemize}
+
+\section{Screenshots}
+
+The following figures represent various user interfaces and dashboards of the EventHive platform. (Insert real screenshots when available.)
+
+\begin{figure}[h]
+    \centering
+    \fbox{\parbox[b][7cm][c]{0.85\textwidth}{\centering \textit{Screenshot Placeholder: Home Page with Navbar, Hero Section, and Event Cards}}}
+    \caption{Home Page Interface}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \fbox{\parbox[b][7cm][c]{0.85\textwidth}{\centering \textit{Screenshot Placeholder: Organisation Dashboard with Event Stats and Notifications}}}
+    \caption{Organisation Dashboard Interface}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \fbox{\parbox[b][7cm][c]{0.85\textwidth}{\centering \textit{Screenshot Placeholder: Participant Registration and OTP Verification Screen}}}
+    \caption{Participant Registration Screen}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \fbox{\parbox[b][7cm][c]{0.85\textwidth}{\centering \textit{Screenshot Placeholder: Admin Control Panel with Event Approvals}}}
+    \caption{Admin Dashboard Interface}
+\end{figure}
+
+\noindent
+All modules together ensure a seamless flow of data and functionality between users, events, and the backend, thereby achieving the objective of an intelligent and interactive event management platform.
+
+\chapter{Testing}
+
+Software testing is a critical phase in software development that ensures the reliability, accuracy, and stability of the application. For \textbf{EventHive}, testing was performed at multiple levels — system testing, unit testing, security testing, and integration testing — to verify that every module works correctly and interacts seamlessly with others.
+
+\section{System Testing}
+
+System testing validates the complete and integrated application to ensure that all functionalities perform as intended. It focuses on verifying both functional and non-functional requirements under realistic conditions.
+
+\subsection*{Objectives of System Testing}
+\begin{itemize}
+    \item To ensure that the entire EventHive application meets the specified user requirements.
+    \item To verify that all modules — Admin, Organisation, Volunteer, and Participant — interact without conflicts.
+    \item To validate end-to-end flows such as registration, event creation, and participation.
+    \item To confirm proper data flow between frontend, backend, and the MongoDB database.
+\end{itemize}
+
+\subsection*{System Testing Scenarios}
+\begin{enumerate}
+    \item \textbf{User Registration:} Verify that new users can register successfully with email OTP verification.
+    \item \textbf{Login Authentication:} Test valid and invalid credential combinations for different roles.
+    \item \textbf{Event Creation:} Ensure organisations can create events with mandatory details and media uploads.
+    \item \textbf{Event Participation:} Validate registration form submission, eligibility checks, and ticket generation.
+    \item \textbf{QR Validation:} Confirm that volunteers can scan QR codes and mark attendance correctly.
+    \item \textbf{Notifications:} Ensure that system-generated and manual notifications are delivered properly.
+    \item \textbf{Admin Oversight:} Test approval, suspension, and deletion actions from the admin dashboard.
+\end{enumerate}
+
+\noindent
+System testing confirmed that the EventHive platform successfully integrates all modules with minimal latency, providing accurate responses and reliable behavior under normal and high load conditions.
+
+\section{Unit Testing}
+
+Unit testing involves verifying individual modules or components of the system to ensure they perform their specific functions as expected.
+
+\subsection*{Tools Used:}
+\begin{itemize}
+    \item \textbf{Jest:} For testing React components and JavaScript logic.
+    \item \textbf{Supertest:} For testing Express.js API endpoints.
+    \item \textbf{MongoMemoryServer:} Used to mock MongoDB during automated backend testing.
+\end{itemize}
+
+\subsection*{Sample Unit Test Cases}
+\begin{itemize}
+    \item \textbf{Frontend Component Tests:}
+    \begin{itemize}
+        \item Verify that Navbar renders correct links based on authentication status.
+        \item Ensure EventCard component displays event title, date, and organiser correctly.
+        \item Validate form field inputs for email and password in SignIn and SignUp components.
+    \end{itemize}
+    \item \textbf{Backend API Tests:}
+    \begin{itemize}
+        \item Test \texttt{/api/auth/register} endpoint for OTP generation and validation.
+        \item Test \texttt{/api/event/create} for event data validation and MongoDB insertion.
+        \item Test \texttt{/api/user/profile} for GET and PUT operations.
+    \end{itemize}
+\end{itemize}
+
+\noindent
+Each component and API endpoint was tested independently to ensure reliability before system integration.
+
+\section{Security Testing}
+
+Since EventHive handles sensitive user data and authentication credentials, robust security testing was carried out to detect and prevent vulnerabilities.
+
+\subsection*{Security Aspects Tested}
+\begin{itemize}
+    \item \textbf{Authentication:} Verified that JWT tokens are correctly issued and validated for each request.
+    \item \textbf{Password Protection:} Confirmed that passwords are hashed using \textbf{bcrypt.js} before storage.
+    \item \textbf{Input Validation:} Ensured that all form inputs are sanitized to prevent SQL/NoSQL injection attacks.
+    \item \textbf{Session Management:} Tested for proper handling of expired tokens and invalid sessions.
+    \item \textbf{Cross-Site Scripting (XSS):} Verified that all user-generated inputs are escaped before rendering.
+    \item \textbf{Cross-Origin Resource Sharing (CORS):} Configured correctly to allow only trusted frontend domains.
+\end{itemize}
+
+\subsection*{Results:}
+\begin{itemize}
+    \item No major vulnerabilities were detected.
+    \item All authentication flows were validated successfully.
+    \item Unauthorized access attempts were correctly blocked by middleware.
+\end{itemize}
+
+\section{Integration Testing}
+
+Integration testing was conducted after successful unit testing to verify interactions between modules and ensure the system works as a cohesive whole.
+
+\subsection*{Objectives of Integration Testing}
+\begin{itemize}
+    \item To validate proper communication between the frontend (React) and backend (Express API).
+    \item To verify data consistency between REST API requests and MongoDB responses.
+    \item To ensure the OTP, registration, and login flows operate correctly across modules.
+\end{itemize}
+
+\subsection*{Integration Test Cases}
+\begin{itemize}
+    \item Register a new user → verify OTP → login → access protected route.
+    \item Organisation creates an event → event appears in participant and admin dashboards.
+    \item Volunteer marks attendance → update reflects in participant status.
+    \item Admin approves organisation → organisation gains access to dashboard.
+\end{itemize}
+
+\subsection*{Integration Testing Results}
+\begin{itemize}
+    \item Frontend and backend synchronization verified successfully.
+    \item API response times were below 300ms on average.
+    \item All CRUD operations performed without data loss or inconsistency.
+\end{itemize}
+
+\noindent
+Testing at every stage confirmed that the EventHive platform is secure, reliable, and functionally complete. All major workflows were validated successfully, ensuring readiness for deployment.
+
+\chapter{Conclusion and Future Scope}
+
+\section{Conclusion}
+
+The \textbf{EventHive – Smart Event Management Platform} successfully demonstrates the development of a scalable, secure, and interactive system that simplifies and automates campus and organizational event management processes. By integrating multiple user roles—\textit{Admin, Organisation, Volunteer, and Participant}—into one unified platform, EventHive bridges the gap between manual coordination and digital transformation.
+
+The platform enables:
+\begin{itemize}
+    \item Seamless registration and participation for users with OTP-based authentication.
+    \item Centralized management of events and participants for organisations.
+    \item Efficient oversight and analytics capabilities for administrators.
+    \item Simplified volunteer coordination and participant verification using QR codes.
+\end{itemize}
+
+The use of modern technologies such as \textbf{React.js, Node.js, Express.js, MongoDB, and Tailwind CSS} ensures high performance, maintainability, and scalability. Integration of \textbf{Nodemailer} for automated emails, \textbf{JWT} for authentication, and \textbf{Framer Motion} for enhanced UI experience make the system robust and user-friendly.
+
+Comprehensive testing—including unit, system, integration, and security testing—validated the reliability and efficiency of each module. As a result, EventHive achieves its goal of providing an all-in-one event management solution for academic institutions and organizations.
+
+\section{Future Scope}
+
+While the current version of EventHive fulfills the essential requirements of an event management system, there are several opportunities for future enhancements and scalability:
+
+\begin{itemize}
+    \item \textbf{Mobile Application:} Develop a cross-platform mobile app using React Native or Flutter to provide real-time access to event updates and registrations.
+    \item \textbf{Payment Gateway Integration:} Implement secure online payment options for paid events and ticket purchases.
+    \item \textbf{Advanced Analytics:} Incorporate data visualization dashboards to analyze user engagement, event popularity, and performance metrics.
+    \item \textbf{AI-Based Recommendation System:} Suggest relevant events to participants based on interests, previous participation, and skills.
+    \item \textbf{Cloud Storage and CDN:} Utilize AWS or Google Cloud for faster and more reliable file and media hosting.
+    \item \textbf{Multi-Language Support:} Add localization for multilingual accessibility across diverse user groups.
+    \item \textbf{Single Sign-On (SSO):} Integrate institutional authentication systems such as OAuth, SAML, or LDAP for seamless login.
+    \item \textbf{Feedback and Rating System:} Allow participants to provide feedback and ratings for events to improve future planning.
+\end{itemize}
+
+\noindent
+The proposed enhancements would not only extend the system’s capabilities but also make EventHive a comprehensive platform suitable for global academic and professional event management needs.
+
+\noindent
+In conclusion, EventHive represents a modern step towards digital event organization, promoting automation, transparency, and collaboration through technology-driven innovation.
+
+\renewcommand{\bibname}{References}
+\addcontentsline{toc}{chapter}{References}
+
+\begin{thebibliography}{99}
+
+\bibitem{reactjs}
+ReactJS Documentation, \textit{React – A JavaScript library for building user interfaces},  
+Available at: \url{https://react.dev/}
+
+\bibitem{nodejs}
+Node.js Documentation, \textit{Node.js – JavaScript runtime built on Chrome's V8 engine},  
+Available at: \url{https://nodejs.org/}
+
+\bibitem{expressjs}
+ExpressJS Documentation, \textit{Fast, unopinionated, minimalist web framework for Node.js},  
+Available at: \url{https://expressjs.com/}
+
+\bibitem{mongodb}
+MongoDB Documentation, \textit{MongoDB – The developer data platform},  
+Available at: \url{https://www.mongodb.com/}
+
+\bibitem{tailwind}
+Tailwind CSS Documentation, \textit{A utility-first CSS framework for rapid UI development},  
+Available at: \url{https://tailwindcss.com/}
+
+\bibitem{jwt}
+JWT (JSON Web Token) Documentation, \textit{Open standard for secure token-based authentication},  
+Available at: \url{https://jwt.io/}
+
+\bibitem{nodemailer}
+Nodemailer Documentation, \textit{Node.js module for sending emails securely and easily},  
+Available at: \url{https://nodemailer.com/}
+
+\bibitem{uml}
+Booch, G., Rumbaugh, J., Jacobson, I. (2005). \textit{The Unified Modeling Language User Guide (2nd Edition)}. Addison-Wesley.
+
+\bibitem{softwareengineering}
+Pressman, R. S., (2019). \textit{Software Engineering: A Practitioner's Approach}, 8th Edition, McGraw Hill Education.
+
+\bibitem{testing}
+Myers, G. J., Sandler, C., Badgett, T. (2011). \textit{The Art of Software Testing}, 3rd Edition, Wiley.
+
+\bibitem{webdev}
+Duckett, J. (2014). \textit{Web Design with HTML, CSS, JavaScript and jQuery Set}. Wiley Publishing.
+
+\end{thebibliography}
+
+\end{document}

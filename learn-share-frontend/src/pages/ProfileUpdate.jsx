@@ -79,7 +79,7 @@ function ProfileUpdate() {
     }
   };
 
-  const availableCategories = ["Math", "Physics", "Chemistry", "Biology", "Computer Science", "English", "History"];
+  const availableCategories = ["web development", "data science", "machine learning", "cloud computing", "cyber security", "ui/ux design", "devops"];
 
   return (
     <div className="p-6 max-w-2xl mx-auto">

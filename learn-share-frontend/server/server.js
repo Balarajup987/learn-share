@@ -69,7 +69,24 @@ app.get("/api/teachers", async (req, res) => {
 });
 
 app.get("/api/skills", (req, res) => {
-  res.json(["Math", "Physics", "Chemistry", "Biology"]);
+  res.json([
+    "Programming",
+    "Web Development",
+    "AI & Machine Learning",
+    "Data Science",
+    "Mobile Development",
+    "Cloud Computing",
+    "Cyber Security",
+    "Blockchain",
+    "DevOps",
+    "Digital Marketing",
+    "UI/UX Design",
+    "Graphic Design",
+    "Photography",
+    "Video Editing",
+    "Content Creation",
+    "Business Development"
+  ]);
 });
 
 app.get("/", (req, res) => res.send("Server running"));

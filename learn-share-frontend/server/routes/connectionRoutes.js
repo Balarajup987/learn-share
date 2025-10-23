@@ -211,13 +211,17 @@ router.get("/user/:userId", authMiddleware, async (req, res) => {
     if (req.user._id.toString() !== userId.toString())
       return res.status(401).json({ message: "Unauthorized" });
 
-    const user = await User.findById(userId).populate(
-      "connections",
-      "name email"
-    );
+    const user = await User.findById(userId).populate({
+      path: "connections",
+      select: "name email role categories bio experience status",
+      match: { status: { $ne: "blocked" } } // Exclude blocked users
+    });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json({ connections: user.connections });
+    // Filter out null connections (those that were blocked)
+    const filteredConnections = user.connections.filter(conn => conn !== null);
+
+    res.json({ connections: filteredConnections });
   } catch (err) {
     console.error("Error fetching user connections:", err);
     res.status(500).json({ message: "Server error" });

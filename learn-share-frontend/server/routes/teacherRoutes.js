@@ -67,7 +67,10 @@ router.post("/register", upload.single("idFile"), async (req, res) => {
 // === Get All Teachers ===
 router.get("/", async (req, res) => {
   try {
-    const teachers = await User.find({ role: { $in: ["teacher", "both"] } });
+    const teachers = await User.find({
+      role: { $in: ["teacher", "both"] },
+      status: { $ne: "blocked" } // Exclude blocked users
+    });
     res.json(teachers);
   } catch (err) {
     console.error("Error fetching teachers:", err);

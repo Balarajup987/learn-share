@@ -1,17 +1,26 @@
 import { useState, useRef, useEffect } from "react";
 import { FaBars, FaTimes, FaSun, FaMoon } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
   const { isLoggedIn, user, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
 
   const firstLetter = user?.name ? user.name.charAt(0).toUpperCase() : "";
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/explore?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,7 +50,10 @@ function Navbar() {
           <li>
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search teachers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleSearch}
               className={`border rounded-full px-5 py-2 outline-none focus:ring-2 focus:ring-green-500 text-base ${isDarkMode ? 'dark:bg-gray-700 dark:border-gray-600 dark:text-white' : ''}`}
             />
           </li>
@@ -183,7 +195,10 @@ function Navbar() {
             <li>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search teachers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleSearch}
                 className={`border rounded-full px-5 py-2 w-full outline-none focus:ring-2 focus:ring-green-500 text-base ${isDarkMode ? 'dark:bg-gray-700 dark:border-gray-600 dark:text-white' : ''}`}
               />
             </li>

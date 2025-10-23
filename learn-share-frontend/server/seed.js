@@ -32,33 +32,14 @@ async function run() {
       role: "admin",
     },
     {
-      name: "Arjun Sharma",
-      email: "arjun@example.com",
-      password,
-      role: "both",
-    },
-    { name: "Priya Patel", email: "priya@example.com", password, role: "both" },
-    {
-      name: "Rajesh Kumar",
-      email: "rajesh@example.com",
-      password,
-      role: "student",
-    },
-    {
       name: "Sneha Singh",
       email: "sneha@example.com",
       password,
       role: "teacher",
     },
     {
-      name: "Vikram Gupta",
-      email: "vikram@example.com",
-      password,
-      role: "teacher",
-    },
-    {
-      name: "Anita Reddy",
-      email: "anita@example.com",
+      name: "Rajesh Kumar",
+      email: "rajesh@example.com",
       password,
       role: "student",
     },
@@ -70,34 +51,6 @@ async function run() {
   // Upgrade some users to teacher profile fields directly on User model
   const teacherDataByEmail = new Map([
     [
-      "arjun@example.com",
-      {
-        categories: ["Mathematics", "Physics"],
-        experience: "8 years",
-        bio: "IIT Delhi graduate with expertise in advanced mathematics and physics.",
-        mode: "Online",
-        github: "https://github.com/rajesh-math",
-        linkedin: "https://linkedin.com/in/rajesh-kumar",
-        website: "https://rajesh-math.com",
-        idFile: "slider1.jpeg",
-        role: "both",
-      },
-    ],
-    [
-      "priya@example.com",
-      {
-        categories: ["Computer Science", "Programming"],
-        experience: "6 years",
-        bio: "Software engineer turned educator.",
-        mode: "Hybrid",
-        github: "https://github.com/priya-cs",
-        linkedin: "https://linkedin.com/in/priya-patel",
-        website: "https://priya-coding.com",
-        idFile: "slider2.jpeg",
-        role: "both",
-      },
-    ],
-    [
       "sneha@example.com",
       {
         categories: ["Chemistry", "Biology"],
@@ -108,20 +61,6 @@ async function run() {
         linkedin: "https://linkedin.com/in/sneha-singh",
         website: "https://sneha-chemistry.com",
         idFile: "slider3.jpeg",
-        role: "teacher",
-      },
-    ],
-    [
-      "vikram@example.com",
-      {
-        categories: ["English Literature", "Communication"],
-        experience: "12 years",
-        bio: "English professor with a passion for literature.",
-        mode: "Offline",
-        github: "https://github.com/vikram-english",
-        linkedin: "https://linkedin.com/in/vikram-gupta",
-        website: "https://vikram-english.com",
-        idFile: "slider4.jpeg",
         role: "teacher",
       },
     ],

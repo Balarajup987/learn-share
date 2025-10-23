@@ -100,10 +100,24 @@ router.get("/", authMiddleware, async (req, res) => {
       .select("-password") // Exclude password
       .sort({ createdAt: -1 });
 
-    res.json(users);
+    res.json({ success: true, users });
   } catch (err) {
     console.error("GET /api/users error", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", success: false });
+  }
+});
+
+// GET /api/users/all - Get all users (for complaint form)
+router.get("/all", authMiddleware, async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select("name email role _id") // Only include necessary fields
+      .sort({ name: 1 });
+
+    res.json({ success: true, users });
+  } catch (err) {
+    console.error("GET /api/users/all error", err);
+    res.status(500).json({ message: "Server error", success: false });
   }
 });
 

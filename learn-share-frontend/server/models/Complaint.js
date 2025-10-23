@@ -94,6 +94,12 @@ const complaintSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // Email of the reported user
+    reportedUserEmail: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
